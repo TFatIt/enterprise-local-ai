@@ -1,0 +1,60 @@
+services:
+  # Database Service (PostgreSQL 16)
+  postgres:
+    image: postgres:16-alpine
+    container_name: enterprise_ai_db
+    restart: always
+    environment:
+      POSTGRES_USER: enterprise_admin
+      POSTGRES_PASSWORD: LocalPass_Secure2026!
+      POSTGRES_DB: enterprise_assistant
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U enterprise_admin -d enterprise_assistant"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend Service
+  backend:
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+    container_name: enterprise_ai_backend
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://enterprise_admin:LocalPass_Secure2026!@postgres:5432/enterprise_assistant
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - OLLAMA_LLM_MODEL=qwen2.5:3b
+      - OLLAMA_EMBED_MODEL=nomic-embed-text
+      - CHROMA_PERSIST_DIRECTORY=/app/chroma_data
+      - UPLOAD_DIRECTORY=/app/uploads
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./chroma_data:/app/chroma_data
+
+  # React Frontend Service (Nginx SPA)
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+    container_name: enterprise_ai_frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+
+volumes:
+  postgres_data:
+    driver: local
