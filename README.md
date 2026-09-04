@@ -118,7 +118,7 @@ enterprise-local-ai/
 
 ---
 
-## 6. Yêu cầu phần cứng đề xuất (Laptop)
+##  Yêu cầu phần cứng đề xuất (Laptop)
 
 * **Hệ điều hành**: Windows 10/11, macOS, hoặc Linux.
 * **CPU**: 4 nhân / 8 luồng trở lên (Intel Core i5 Gen 11+, AMD Ryzen 5000 series trở lên).
@@ -130,9 +130,9 @@ enterprise-local-ai/
 
 ---
 
-## 7. Hướng dẫn cài đặt nhanh (Quickstart)
+##  Hướng dẫn cài đặt nhanh (Quickstart)
 
-### Bước 1: Khởi động Ollama và tải mô hình AI
+### : Khởi động Ollama và tải mô hình AI
 Cài đặt Ollama từ [ollama.com](https://ollama.com) và chạy các lệnh:
 ```bash
 # Tải mô hình Embedding cục bộ
@@ -143,7 +143,7 @@ ollama pull qwen2.5:3b
 # (hoặc ollama pull qwen2.5:1.5b nếu máy cấu hình RAM thấp)
 ```
 
-### Bước 2: Chạy Backend (Môi trường Development)
+###  Chạy Backend (Môi trường Development)
 ```bash
 cd backend
 python -m venv venv
@@ -154,7 +154,7 @@ uvicorn app.main:app --reload --port 8000
 ```
 Truy cập Swagger API Documentation tại: `http://localhost:8000/docs`
 
-### Bước 4: Triển khai toàn diện bằng Docker Compose (Khuyến nghị Production/Defense)
+###  Triển khai toàn diện bằng Docker Compose (Khuyến nghị Production/Defense)
 Hệ thống hỗ trợ khởi chạy toàn bộ các dịch vụ bằng 1 lệnh duy nhất:
 ```bash
 docker-compose up --build -d
@@ -166,12 +166,9 @@ docker-compose up --build -d
 
 ---
 
-## 8. Tài liệu Kịch bản Demo Bảo vệ Tốt nghiệp
-Xem kịch bản thuyết trình và demo thực tế từng bước dành cho Hội đồng tại: [DEMO_GUIDE.md](file:///d:/Maytinh-data/Downloads/AI/DEMO_GUIDE.md).
 
----
 
-## 9. Bộ kiểm thử tự động (Test Suite)
+##  Bộ kiểm thử tự động (Test Suite)
 Dự án được bảo chứng với **52/52 bài kiểm thử tự động (Unit & Integration Tests)**:
 ```bash
 $env:PYTHONPATH="backend"; pytest -v tests/
