@@ -1,0 +1,26 @@
+CÔNG TY CỔ PHẦN CÔNG NGHỆ DOANH NGHIỆP VIỆT NAM
+CHÍNH SÁCH AN TOÀN THÔNG TIN & TUÂN THỦ BẢO VỆ DỮ LIỆU CÁ NHÂN
+Mã tài liệu: CS-ATTT-2026-05 | Ngày ban hành: 10/02/2026 | Bộ phận: Ban An toàn Thông tin & Pháp chế
+
+CHƯƠNG 1: PHÂN LOẠI VÀ BẢO VỆ TÀI SẢN THÔNG TIN
+1. Phân cấp mức độ bảo mật dữ liệu doanh nghiệp:
+   - Cấp 1 (Công khai - Public): Tài liệu giới thiệu sản phẩm, brochure, thông cáo báo chí được phê duyệt công khai.
+   - Cấp 2 (Nội bộ - Internal): Quy trình nội bộ, sổ tay nhân viên, danh bạ nhân sự, tài liệu kỹ thuật phổ thông.
+   - Cấp 3 (Bảo mật - Confidential): Hợp đồng kinh tế, báo giá chiết khấu, sơ đồ hạ tầng mạng, mã nguồn sản phẩm (Source Code).
+   - Cấp 4 (Tối mật - Strictly Confidential): Báo cáo tài chính chưa công bố, dữ liệu căn cước công dân và lương của nhân viên, khóa bí mật SSL/TLS, tài khoản quản trị Domain Controller.
+2. Nguyên tắc đặc quyền tối thiểu (Least Privilege): Nhân viên chỉ được cấp quyền truy cập vào các tài nguyên và thư mục mạng phục vụ trực tiếp cho công việc của mình. Nghiêm cấm chia sẻ tài khoản hoặc mật khẩu cá nhân cho đồng nghiệp.
+
+CHƯƠNG 2: TUÂN THỦ NGHỊ ĐỊNH 13/2023/NĐ-CP VỀ BẢO VỆ DỮ LIỆU CÁ NHÂN (PDPD)
+1. Phạm vi dữ liệu cá nhân thu thập: Họ tên, ngày sinh, số CCCD, số điện thoại, địa chỉ, số tài khoản ngân hàng, hình ảnh khuôn mặt từ camera giám sát của nhân viên và khách hàng.
+2. Nguyên tắc xử lý dữ liệu:
+   - Phải có sự đồng thuận rõ ràng bằng văn bản hoặc hộp tích điện tử (Consent Form) trước khi thu thập.
+   - Dữ liệu chỉ được sử dụng đúng mục đích đã thông báo (tính lương, thực hiện hợp đồng, đăng ký thuế).
+   - Không chuyển giao, mua bán hoặc cung cấp dữ liệu cá nhân cho bên thứ ba khi chưa có sự đồng ý của chủ thể dữ liệu, trừ trường hợp cơ quan nhà nước có thẩm quyền yêu cầu theo luật định.
+3. Quy trình phản ứng khi phát hiện rò rỉ dữ liệu (Data Breach):
+   - Bất kỳ nhân viên nào phát hiện sự cố lộ lọt dữ liệu phải thông báo ngay lập tức cho Đội An toàn Thông tin (Security Team) qua email security@enterprise.local.
+   - Đội An toàn Thông tin có trách nhiệm khoanh vùng, cô lập và báo cáo Cục An ninh mạng và Phòng chống tội phạm công nghệ cao (Bộ Công an) trong thời hạn tối đa 72 giờ kể từ khi phát hiện sự cố theo Điều 23 Nghị định 13/2023/NĐ-CP.
+
+CHƯƠNG 3: NGUYÊN TẮC AN TOÀN TRẠM LÀM VIỆC (CLEAN DESK & ENDPOINT SECURITY)
+1. Khóa màn hình (Lock Screen): Nhân viên khi rời khỏi bàn làm việc từ 01 phút trở lên bắt buộc phải khóa màn hình bằng tổ hợp phím Windows + L hoặc Cmd + Ctrl + Q.
+2. Kiểm soát thiết bị lưu trữ ngoài: Nghiêm cấm cắm USB, ổ cứng di động lạ vào máy tính công ty. Mọi thiết bị lưu trữ ngoại vi phải được IT quét mã độc và cấp quyền trước khi sử dụng.
+3. Cài đặt phần mềm: Nhân viên tuyệt đối không tự ý cài đặt các phần mềm bẻ khóa (Crack), phần mềm torrent chia sẻ file P2P hoặc các tiện ích mở rộng trình duyệt không rõ nguồn gốc.

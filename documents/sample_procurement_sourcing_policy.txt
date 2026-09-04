@@ -1,0 +1,33 @@
+CÔNG TY CỔ PHẦN CÔNG NGHỆ DOANH NGHIỆP VIỆT NAM
+QUY TRÌNH MUA SẮM HÀNG HÓA VÀ ĐÁNH GIÁ NHÀ CUNG CẤP (PROCURE-TO-PAY)
+Mã tài liệu: QT-TM-2026-06 | Ngày ban hành: 15/02/2026 | Bộ phận: Bộ phận Thu mua & Chuỗi Cung ứng
+
+CHƯƠNG 1: QUY TRÌNH MUA HÀNG 5 BƯỚC CHUẨN
+1. Bước 1: Lập phiếu yêu cầu mua sắm (Purchase Requisition - PR):
+   - Đơn vị có nhu cầu lập Phiếu PR mô tả chi tiết thông số kỹ thuật, số lượng, ngày cần hàng và mục đích sử dụng.
+   - Phiếu PR phải được Trưởng phòng phê duyệt và xác nhận còn trong hạn mức ngân sách năm.
+2. Bước 2: Thu thập và phân tích báo giá:
+   - Với đơn hàng dưới 10.000.000 VNĐ: Thu mua được phép lấy 01 báo giá từ Nhà cung cấp chiến lược (AVL).
+   - Với đơn hàng từ 10.000.000 VNĐ trở lên: Bắt buộc phải thu thập tối thiểu 03 (ba) báo giá độc lập từ các nhà cung cấp khác nhau và lập Bảng so sánh 3 báo giá (Quotation Comparison Sheet).
+3. Bước 3: Đàm phán và phát hành Đơn đặt hàng (Purchase Order - PO):
+   - Đàm phán chiết khấu thương mại, điều khoản bảo hành tối thiểu 12 tháng và thời hạn công nợ (Credit Term) ít nhất 15-30 ngày.
+   - Phát hành PO có chữ ký của Trưởng bộ phận Thu mua và Kế toán trưởng.
+4. Bước 4: Giao nhận, kiểm tra chất lượng và nhập kho:
+   - Thu mua cùng Bộ phận sử dụng và Thủ kho kiểm tra quy cách, tem niêm phong, serial number và giấy chứng nhận xuất xứ (CO/CQ) nếu có.
+   - Lập Biên bản giao nhận và Phiếu nhập kho (Goods Receipt Note).
+5. Bước 5: Hoàn tất hồ sơ thanh toán chuyển cho Phòng Kế toán đối chiếu 3 chiều (PO - Phiếu kho - Hóa đơn VAT).
+
+CHƯƠNG 2: TIÊU CHÍ ĐÁNH GIÁ VÀ LỰA CHỌN NHÀ CUNG CẤP (VENDOR EVALUATION)
+1. Thang điểm đánh giá nhà cung cấp (Thang điểm 100 theo chuẩn ISO 9001):
+   - Chất lượng sản phẩm/dịch vụ (Quality): Trọng số 40% (tỷ lệ hàng lỗi dưới 1%, đạt chuẩn kỹ thuật yêu cầu).
+   - Đơn giá cạnh tranh (Price Competitiveness): Trọng số 30% (so sánh với mặt bằng giá thị trường).
+   - Thời gian giao hàng (On-time Delivery): Trọng số 15% (đúng tiến độ cam kết trong hợp đồng).
+   - Dịch vụ bảo hành, hỗ trợ kỹ thuật (After-sales Service): Trọng số 15% (thời gian phản hồi sự cố dưới 4 giờ).
+2. Xếp loại nhà cung cấp:
+   - Hạng A (Từ 85 - 100 điểm): Nhà cung cấp ưu tiên hợp tác lâu dài và đưa vào danh bạ Approved Vendor List (AVL).
+   - Hạng B (Từ 70 - 84 điểm): Đạt yêu cầu, tiếp tục theo dõi.
+   - Hạng C (Dưới 70 điểm): Cảnh báo, yêu cầu giải trình hoặc ngừng giao dịch trong vòng 06 tháng.
+
+CHƯƠNG 3: QUY TẮC ĐẠO ĐỨC TRONG MUA SẮM (PROCUREMENT ETHICS)
+1. Cán bộ nhân viên làm công tác thu mua tuyệt đối không được nhận tiền hoa hồng, quà biếu có giá trị trên 500.000 VNĐ từ các nhà cung cấp hoặc nhà thầu.
+2. Không chỉ định thầu hoặc ưu ái cho các đơn vị có quan hệ gia đình, người thân mà không công khai xung đột lợi ích (Conflict of Interest) với Ban Giám đốc.
