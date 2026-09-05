@@ -102,9 +102,9 @@ if !errorlevel! equ 0 (
     echo [THAT BAI] KHONG THE DAY CODE LEN GITHUB!
     echo =====================================================================
     echo Goi y kiem tra:
-    echo 1. Kiem tra ket noi mang Internet.
-    echo 2. Kiem tra quyen truy cap repository tren GitHub (Personal Access Token / SSH).
-    echo 3. Kiem tra 'git status' de xem chi tiet.
+    echo - Kiem tra ket noi mang Internet hoac bat VPN neu nha mang chan port 443.
+    echo - Kiem tra quyen truy cap repository tren GitHub.
+    echo - Chay 'git status' de xem chi tiet.
     echo =====================================================================
 )
 
