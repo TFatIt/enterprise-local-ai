@@ -1,6 +1,5 @@
 @echo off
 setlocal enabledelayedexpansion
-chcp 65001 >nul
 title Enterprise Local AI - Control Center
 
 :: Di chuyen ve thu muc goc cua du an
@@ -10,28 +9,28 @@ cd /d "%ROOT_DIR%"
 
 :MENU
 cls
-echo ====================================================================================
-echo                 ENTERPRISE LOCAL AI ASSISTANT - TRUNG TÂM ĐIỀU KHIỂN
-echo ====================================================================================
+echo =====================================================================
+echo           ENTERPRISE LOCAL AI ASSISTANT - TRUNG TAM DIEU KHIEN
+echo =====================================================================
 echo.
 echo   [ DOCKER CONTAINERS ]
-echo     1. 🐳 Bật toàn bộ hệ thống bằng Docker (Web: 3000, API: 8000, DB: 5433)
-echo     2. 🛑 Dừng toàn bộ hệ thống Docker
-echo     3. 📜 Xem nhật ký hoạt động (Docker Logs realtime)
+echo     1. Bat toan bo he thong bang Docker (Web: 3000, API: 8000, DB: 5433)
+echo     2. Dung toan bo he thong Docker
+echo     3. Xem nhat ky hoat dong (Docker Logs realtime)
 echo.
 echo   [ NATIVE LOCAL DEV ]
-echo     4. 💻 Bật hệ thống chế độ Dev Local (Python Uvicorn: 8000, Vite: 5173)
-echo     5. ⛔ Dừng hệ thống chế độ Dev Local (Tắt port 8000 & 5173)
+echo     4. Bat he thong che do Dev Local (Python: 8000, Vite: 5173)
+echo     5. Dung he thong che do Dev Local (Tat port 8000 va 5173)
 echo.
-echo   [ CÔNG CỤ & HỆ THỐNG ]
-echo     6. 🚀 Tự động Commit & Đẩy toàn bộ mã nguồn lên GitHub (Git Auto Push)
-echo     7. ⚙️ Tải / Cập nhật mô hình AI Ollama (qwen2.5:3b & nomic-embed-text)
-echo     8. 🔍 Kiểm tra trạng thái kết nối toàn bộ hệ thống (Health Check)
+echo   [ CONG CU VA HE THONG ]
+echo     6. Tu dong Commit va Day ma nguon len GitHub (Git Auto Push)
+echo     7. Tai / Cap nhat mo hinh AI Ollama (qwen2.5:3b va nomic-embed-text)
+echo     8. Kiem tra trang thai toan bo he thong (Health Check)
 echo.
-echo     0. ❌ Thoát (Exit)
-echo ====================================================================================
+echo     0. Thoat (Exit)
+echo =====================================================================
 set "CHOICE="
-set /p "CHOICE=Nhập lựa chọn của bạn [0-8]: "
+set /p "CHOICE=Nhap lua chon cua ban [0-8]: "
 
 if "%CHOICE%"=="1" goto DOCKER_RUN
 if "%CHOICE%"=="2" goto DOCKER_STOP
@@ -44,14 +43,14 @@ if "%CHOICE%"=="8" goto HEALTH_CHECK
 if "%CHOICE%"=="0" goto EXIT_SCRIPT
 
 echo.
-echo [!] Lựa chọn không hợp lệ, vui lòng thử lại.
+echo [!] Lua chon khong hop le, vui long thu lai.
 ping -n 2 127.0.0.1 >nul
 goto MENU
 
 
-:: ====================================================================================
+:: =====================================================================
 :: 1. DOCKER RUN
-:: ====================================================================================
+:: =====================================================================
 :DOCKER_RUN
 cls
 echo =====================================================================
@@ -94,7 +93,7 @@ echo [OK] Docker Desktop Engine dang hoat dong tot!
 echo.
 
 :: Kiem tra Ollama port 11434
-echo [*] Kiem tra dich vu Ollama AI (port 11434)...
+echo [*] Kiem tra dich vu Ollama AI port 11434...
 netstat -ano | findstr ":11434" | findstr "LISTENING" >nul 2>&1
 if !errorlevel! equ 0 (
     echo [OK] Ollama dang hoat dong san sang.
@@ -139,9 +138,9 @@ pause
 goto MENU
 
 
-:: ====================================================================================
+:: =====================================================================
 :: 2. DOCKER STOP
-:: ====================================================================================
+:: =====================================================================
 :DOCKER_STOP
 cls
 echo =====================================================================
@@ -157,9 +156,9 @@ pause
 goto MENU
 
 
-:: ====================================================================================
+:: =====================================================================
 :: 3. DOCKER LOGS
-:: ====================================================================================
+:: =====================================================================
 :DOCKER_LOGS
 cls
 echo =====================================================================
@@ -170,9 +169,9 @@ docker compose logs -f
 goto MENU
 
 
-:: ====================================================================================
+:: =====================================================================
 :: 4. LOCAL RUN (NATIVE DEV)
-:: ====================================================================================
+:: =====================================================================
 :LOCAL_RUN
 cls
 echo =====================================================================
@@ -180,7 +179,6 @@ echo           KHOI DONG HE THONG CHE DO DEV LOCAL (KHONG DOCKER)
 echo =====================================================================
 echo.
 
-:: 1. Kiem tra Python Virtual Environment
 set "PYTHON_VENV="
 if exist "%ROOT_DIR%\.venv\Scripts\uvicorn.exe" (
     set "PYTHON_VENV=%ROOT_DIR%\.venv"
@@ -194,7 +192,6 @@ if "%PYTHON_VENV%"=="" (
     goto MENU
 )
 
-:: 2. Kiem tra Ollama
 netstat -ano | findstr ":11434" | findstr "LISTENING" >nul 2>&1
 if !errorlevel! neq 0 (
     echo [*] Bat dich vu Ollama ngam...
@@ -206,13 +203,11 @@ if !errorlevel! neq 0 (
     ping -n 3 127.0.0.1 >nul
 )
 
-:: 3. Chay Backend tren cua so rieng
 echo [*] Dang khoi dong Backend FastAPI tai cong 8000...
 start "Enterprise Local AI - Backend" cmd /k "cd /d "%ROOT_DIR%\backend" && "%PYTHON_VENV%\Scripts\uvicorn.exe" app.main:app --host 127.0.0.1 --port 8000 --reload"
 
 ping -n 3 127.0.0.1 >nul
 
-:: 4. Chay Frontend tren cua so rieng
 echo [*] Dang khoi dong Frontend Vite tai cong 5173...
 start "Enterprise Local AI - Frontend" cmd /k "cd /d "%ROOT_DIR%\frontend" && npm run dev"
 
@@ -228,9 +223,9 @@ pause
 goto MENU
 
 
-:: ====================================================================================
+:: =====================================================================
 :: 5. LOCAL STOP
-:: ====================================================================================
+:: =====================================================================
 :LOCAL_STOP
 cls
 echo =====================================================================
@@ -256,9 +251,9 @@ pause
 goto MENU
 
 
-:: ====================================================================================
+:: =====================================================================
 :: 6. GIT AUTO PUSH
-:: ====================================================================================
+:: =====================================================================
 :GIT_PUSH
 cls
 echo =====================================================================
@@ -291,7 +286,7 @@ git status --short
 echo ---------------------------------------------------------------------
 echo.
 
-echo [?] Nhap thong diep commit (Nhan Enter de lay mac dinh theo ngay gio):
+echo Nhap thong diep commit (Nhan Enter de lay mac dinh theo ngay gio):
 set "USER_MSG="
 set /p "USER_MSG=> "
 
@@ -348,13 +343,13 @@ pause
 goto MENU
 
 
-:: ====================================================================================
+:: =====================================================================
 :: 7. SETUP OLLAMA MODELS
-:: ====================================================================================
+:: =====================================================================
 :SETUP_MODELS
 cls
 echo =====================================================================
-echo           TAI VA CAI DAT MO HINH AI OLLAMA (QWEN2.5 & EMBED)
+echo           TAI VA CAI DAT MO HINH AI OLLAMA (QWEN2.5 VA EMBED)
 echo =====================================================================
 echo.
 
@@ -378,11 +373,11 @@ if !errorlevel! neq 0 (
 )
 
 echo.
-echo [1/2] Dang tai / cap nhat mo hinh LLM chinh (qwen2.5:3b - ~1.9GB)...
+echo [1/2] Dang tai / cap nhat mo hinh LLM chinh (qwen2.5:3b - khoang 1.9GB)...
 ollama pull qwen2.5:3b
 
 echo.
-echo [2/2] Dang tai / cap nhat mo hinh Embedding (nomic-embed-text - ~274MB)...
+echo [2/2] Dang tai / cap nhat mo hinh Embedding (nomic-embed-text - khoang 274MB)...
 ollama pull nomic-embed-text
 
 echo.
@@ -396,9 +391,9 @@ pause
 goto MENU
 
 
-:: ====================================================================================
+:: =====================================================================
 :: 8. HEALTH CHECK
-:: ====================================================================================
+:: =====================================================================
 :HEALTH_CHECK
 cls
 echo =====================================================================
@@ -419,7 +414,7 @@ echo --- 2. Trang thai Cong mang (Listening Ports) ---
 for %%p in (3000 5173 5432 5433 8000 11434) do (
     netstat -ano | findstr ":%%p" | findstr "LISTENING" >nul 2>&1
     if !errorlevel! equ 0 (
-        echo   [OPEN] Cong %%p dang hoat dong ^(LISTENING^)
+        echo   [OPEN] Cong %%p dang hoat dong (LISTENING)
     ) else (
         echo   [----] Cong %%p dang dong
     )
@@ -446,9 +441,9 @@ pause
 goto MENU
 
 
-:: ====================================================================================
+:: =====================================================================
 :: 0. EXIT
-:: ====================================================================================
+:: =====================================================================
 :EXIT_SCRIPT
 cls
 echo Cam on ban da su dung Enterprise Local AI Control Center!
