@@ -26,11 +26,12 @@ echo   [ CONG CU VA HE THONG ]
 echo     6. Tu dong Commit va Day ma nguon len GitHub (Git Auto Push)
 echo     7. Tai / Cap nhat mo hinh AI Ollama (qwen2.5:3b va nomic-embed-text)
 echo     8. Kiem tra trang thai toan bo he thong (Health Check)
+echo     9. Tu dong nap tai lieu vao Kho tri thuc RAG (Auto Ingest Documents)
 echo.
 echo     0. Thoat (Exit)
 echo =====================================================================
 set "CHOICE="
-set /p "CHOICE=Nhap lua chon cua ban [0-8]: "
+set /p "CHOICE=Nhap lua chon cua ban [0-9]: "
 
 if "%CHOICE%"=="1" goto DOCKER_RUN
 if "%CHOICE%"=="2" goto DOCKER_STOP
@@ -40,6 +41,7 @@ if "%CHOICE%"=="5" goto LOCAL_STOP
 if "%CHOICE%"=="6" goto GIT_PUSH
 if "%CHOICE%"=="7" goto SETUP_MODELS
 if "%CHOICE%"=="8" goto HEALTH_CHECK
+if "%CHOICE%"=="9" goto INGEST_DOCS
 if "%CHOICE%"=="0" goto EXIT_SCRIPT
 
 echo.
@@ -435,6 +437,51 @@ where git >nul 2>&1
 if !errorlevel! equ 0 (
     git status --short
 )
+echo.
+echo =====================================================================
+pause
+goto MENU
+
+
+:: =====================================================================
+:: 9. AUTO INGEST DOCUMENTS
+:: =====================================================================
+:INGEST_DOCS
+cls
+echo =====================================================================
+echo        TU DONG NAP TAI LIEU VAO KHO TRI THUC RAG (CHROMADB)
+echo =====================================================================
+echo.
+echo [*] Kiem tra ket noi Backend API port 8000...
+netstat -ano | findstr ":8000" | findstr "LISTENING" >nul 2>&1
+if !errorlevel! neq 0 (
+    echo [!] Backend API chua duoc bat (Port 8000 dang dong).
+    echo Vui long bat he thong truoc (Chon 1 - Docker hoac 4 - Local Dev).
+    echo.
+    pause
+    goto MENU
+)
+
+echo [*] Kiem tra dich vu Ollama AI port 11434...
+netstat -ano | findstr ":11434" | findstr "LISTENING" >nul 2>&1
+if !errorlevel! neq 0 (
+    echo [!] Ollama chua duoc bat (Port 11434 dang dong).
+    echo Dang thu khoi dong Ollama serve...
+    powershell -WindowStyle Hidden -Command "Start-Process ollama -ArgumentList 'serve' -WindowStyle Hidden"
+    ping -n 4 127.0.0.1 >nul
+)
+
+echo [OK] Backend va Ollama da san sang.
+echo [*] Dang khoi chay tien trinh tu dong nap tai lieu va lap chi muc RAG...
+echo.
+
+set "PY_EXE=python"
+if exist "%ROOT_DIR%\.venv\Scripts\python.exe" (
+    set "PY_EXE=%ROOT_DIR%\.venv\Scripts\python.exe"
+)
+
+"%PY_EXE%" "%ROOT_DIR%\backend\scripts\ingest_all_documents.py"
+
 echo.
 echo =====================================================================
 pause

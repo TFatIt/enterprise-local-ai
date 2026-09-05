@@ -64,3 +64,8 @@ class ChatSessionDetailResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     messages: List[ChatMessageResponse] = []
+
+
+class MessageFeedbackCreate(BaseModel):
+    rating: int = Field(..., ge=1, le=5, description="Đánh giá từ 1 đến 5 sao hoặc 1 (dislike) / 5 (like)")
+    comment: Optional[str] = Field(None, max_length=1000, description="Ý kiến đóng góp chi tiết")

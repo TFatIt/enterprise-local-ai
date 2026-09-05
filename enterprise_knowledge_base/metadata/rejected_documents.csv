@@ -1,0 +1,7 @@
+rejected_id,file_name,department,content_type,source,rejection_reason,details
+REJ-001,crack_windows_11_kms_activator.rar,IT_HELPDESK,Pirated / Malicious software activators,Unverified third-party forum,SECURITY_RISK_MALWARE,Score: 12 - Violated security rules
+REJ-002,danh_sach_nhan_vien_kem_so_tai_khoan_ngan_hang.xlsx,HR,Danh sách lương và số tài khoản cá nhân,Internal Shared Folder,PII_VIOLATION_CONFIDENTIAL,Score: 0 - Contains sensitive employee PII
+REJ-003,cisco_router_passwords_default_list.txt,IT_NETWORK,Danh sách mật khẩu mặc định thiết bị mạng,Public pastebin,SECURITY_RISK_CREDENTIALS,Score: 25 - Credential leak
+REJ-004,sample_html_ad_banner_tracking.html,MARKETING,Banner quảng cáo và mã theo dõi rác,Web Scrape Ad Network,LOW_QUALITY_NOISE,Score: 30 - Non-knowledge HTML junk
+REJ-005,quy_dinh_ke_toan_nam_1995_het_hieu_luc.doc,ACCOUNTING,Văn bản kế toán cũ đã hết hiệu lực thi hành,Old Legal Mirror,OBSOLETE_LEGAL_DATA,Score: 45 - Outdated regulation replaced by TT 200
+REJ-006,broken_scan_unreadable_contract_ocr_failed.pdf,LEGAL,File scan mờ không thể nhận diện OCR,Physical Archive Scan,CORRUPTED_FILE,Score: 35 - Unreadable text content

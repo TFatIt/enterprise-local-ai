@@ -48,6 +48,8 @@ graph TD
     end
 
     subgraph RAG & AI Engine
+        IntentClassifier["Hybrid Intent Classifier (<1ms Regex + Domain Scoring)"]
+        ConvMemory["Conversation Memory & Context Reformulation"]
         Parser["Document Parser (PDF, DOCX, TXT, XLSX, CSV)"]
         PIIEngine["PII Masker & Redaction Engine (Nghị định 13)"]
         Chunker["Text Chunker (Recursive Character Splitter)"]
@@ -122,9 +124,9 @@ Khi Admin tải lên tài liệu mới:
 [Cập nhật trạng thái Document trong PostgreSQL (Status: INDEXED)]
 ```
 
-### 3.2. Luồng Hỏi đáp Tri thức (RAG Query Execution Flow)
+### 3.2. Luồng Điều phối & Hỏi đáp Tri thức (Dual-Path Query Orchestration)
 
-Khi Nhân viên đặt câu hỏi:
+Khi Nhân viên gửi tin nhắn, hệ thống phân loại Intent tức thì (<1ms) và kích hoạt luồng tương ứng:
 
 ```mermaid
 sequenceDiagram
@@ -132,31 +134,31 @@ sequenceDiagram
     actor Employee as Nhân viên
     participant FE as Frontend (React)
     participant API as FastAPI Backend
-    participant Postgres as PostgreSQL
-    participant Chroma as ChromaDB
+    participant Intent as Intent Classifier
+    participant Memory as Conversation Memory
+    participant Chroma as ChromaDB & BM25
+    participant Rerank as FlashRank Reranker
     participant Ollama as Ollama (Local LLM)
 
-    Employee->>FE: Nhập câu hỏi: "Làm sao kết nối máy in văn phòng?"
-    FE->>API: POST /api/v1/chat/messages (session_id, question)
-    API->>Postgres: Lưu câu hỏi của người dùng vào chat_messages
-    
-    API->>Ollama: POST /api/embeddings (nomic-embed-text) với câu hỏi
-    Ollama-->>API: Trả về query vector
-    
-    API->>Chroma: Vector Similarity Search (Top-K = 5, filtered by department/role)
-    Chroma-->>API: Trả về Top 5 Chunks phù hợp nhất + Độ tương đồng (Cosine Distance)
-    
-    alt Không tìm thấy chunk phù hợp (Similarity Score < Ngưỡng tin cậy)
-        API->>Postgres: Lưu câu trả lời fallback vào chat_messages
-        API-->>FE: "Không tìm thấy thông tin trong tài liệu nội bộ. Bạn có muốn tạo IT Ticket hỗ trợ không?"
-    else Tìm thấy Chunks đáng tin cậy
-        API->>API: Xây dựng Prompt (System Instructions + Retrieved Chunks + Question)
-        API->>Ollama: Gửi Prompt tới Qwen3 4B
-        Ollama-->>API: Sinh câu trả lời tổng hợp
-        API->>API: Trích xuất danh sách nguồn (Sources: Tên file, trang, trích dẫn)
-        API->>Postgres: Lưu câu trả lời và metadata nguồn vào chat_messages
-        API-->>FE: Trả về Answer + Sources
-        FE-->>Employee: Hiển thị câu trả lời với trích dẫn nguồn có thể bấm xem
+    Employee->>FE: Gửi tin nhắn ("hi", "mệt quá", hoặc "cách cấu hình VPN")
+    FE->>API: POST /api/v1/chat/sessions/{id}/messages
+    API->>Memory: Lấy lịch sử hội thoại gần nhất (Sliding Window 6 turns)
+    API->>Intent: Phân loại Intent (Regex Fast-Path + Domain Scoring)
+
+    alt Nhánh 1: General Chat / Small Talk (is_enterprise = False)
+        Note over API,Ollama: Hoàn toàn bỏ qua Vector Search & RAG
+        API->>Ollama: Prompt với GENERAL_CHAT_SYSTEM_PROMPT + History
+        Ollama-->>API: Trả về câu trả lời tự nhiên, thân thiện (ChatGPT-like)
+        API-->>FE: Trả về Answer (sources: [], suggest_ticket: false)
+    else Nhánh 2: Enterprise Knowledge Base RAG (is_enterprise = True)
+        API->>Memory: Context Reformulation (chuẩn hóa câu hỏi theo ngữ cảnh)
+        API->>Chroma: Vector Similarity Search + BM25 Hybrid Fusion (ACL Filtered)
+        Chroma-->>API: Top Chunks ứng viên
+        API->>Rerank: FlashRank Cross-Encoder rerank top-k
+        Rerank-->>API: Relevant Chunks
+        API->>Ollama: Gửi Prompt với ENTERPRISE_RAG_SYSTEM_PROMPT + <company_context>
+        Ollama-->>API: Sinh câu trả lời có cấu trúc và trích dẫn [1], [2]
+        API-->>FE: Trả về Answer + Clean UTF-8 Citations
     end
 ```
 

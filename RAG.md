@@ -6,41 +6,41 @@ Tài liệu này đặc tả quy trình kỹ thuật, thuật toán và chiến 
 
 ---
 
-## 1. Triết lý Thiết kế RAG Cục bộ (Local RAG Philosophy)
+## 1. Triết lý Thiết kế Kiến trúc Kép (Dual-Path Architecture)
 
-Trong hệ thống Enterprise Local AI Assistant:
-1. **LLM không phải kho lưu trữ tri thức tĩnh**: Mô hình ngôn ngữ lớn (LLM) chỉ đóng vai trò là một "bộ đọc hiểu, tổng hợp và định dạng ngôn ngữ tự nhiên". Toàn bộ tri thức doanh nghiệp bắt buộc phải đến từ **Knowledge Base**.
-2. **Nguyên tắc "No Context, No Answer"**: Nếu trong kho vector không tìm thấy thông tin có độ tương đồng đạt chuẩn tin cậy, AI tuyệt đối không được tự suy đoán hoặc sáng tạo câu trả lời. Hệ thống phải trung thực thừa nhận và gợi ý người dùng tạo IT Support Ticket.
-3. **100% Khả năng kiểm chứng (Verifiability)**: Mọi câu trả lời chuyên môn đều phải đính kèm danh sách trích dẫn nguồn cụ thể (Tên tài liệu, số trang, đoạn văn tương ứng).
+Trong hệ thống Enterprise Local AI Assistant, kiến trúc xử lý tin nhắn được chia thành 2 luồng độc lập qua **Intent Classifier (<1ms)**:
+
+1. **Nhánh General Chat & Hỗ trợ Công việc (Zero RAG)**:
+   - Áp dụng cho: Chào hỏi ("hi", "xin chào"), hỏi thăm/tâm sự ("mệt mỏi quá"), kiến thức CNTT phổ thông (VLAN là gì, Docker vs VM), soạn thảo email, dịch thuật, tóm tắt.
+   - Cơ chế: Gọi trực tiếp mô hình ngôn ngữ lớn (Qwen 2.5 3B) với `GENERAL_CHAT_SYSTEM_PROMPT`.
+   - Lợi ích: Tốc độ phản hồi tức thì, giọng văn tự nhiên như ChatGPT, **hoàn toàn không kích hoạt vector search**, không trích xuất văn bản rác và không ép người dùng vào quy trình hay tạo ticket.
+
+2. **Nhánh Enterprise Knowledge Base RAG (Grounded Retrieval)**:
+   - Áp dụng cho: Tra cứu chính sách, quy chế, quy trình kỹ thuật, sự cố hạ tầng nội bộ, văn bản pháp lý, kế toán, nhân sự.
+   - Cơ chế: Multi-turn Context Reformulation -> Hybrid Search (ChromaDB Cosine + BM25 Lexical + Reciprocal Rank Fusion) -> FlashRank Cross-Encoder Reranker -> Encapsulation `<company_context>` -> Generation với `ENTERPRISE_RAG_SYSTEM_PROMPT`.
+   - Nguyên tắc **No Context, No Hallucination**: AI không bịa đặt số hiệu hay quy trình. Mọi câu trả lời chuyên môn đều có trích dẫn nguồn [1], [2] với tiêu đề UTF-8 chuẩn xác.
 
 ---
 
-## 2. Sơ đồ Kiến trúc Pipeline RAG
+## 2. Sơ đồ Kiến trúc Pipeline RAG Kép (Dual-Path Pipeline)
 
 ```mermaid
 flowchart TD
-    subgraph GIAI ĐOẠN 1: NẠP VÀ VECTOR HÓA (INGESTION)
-        DocInput["Tài liệu gốc (PDF / DOCX / TXT)"] --> Parser["Document Parser (Trích xuất text & số trang)"]
-        Parser --> Cleaner["Text Cleaner (Chuẩn hóa khoảng trắng, ký tự đặc biệt)"]
-        Cleaner --> Chunker["Chunker (Recursive Character Splitter)"]
-        Chunker -->|Từng chunk + Metadata| Embedder["Embedding Model (nomic-embed-text qua Ollama)"]
-        Embedder -->|Vector 768-dim| Chroma[(ChromaDB: enterprise_knowledge_base)]
-        Chunker -->|Lưu vết văn bản| Postgres[(PostgreSQL: document_chunks)]
-    end
+    UserInput["Tin nhắn của Người dùng"] --> IntentEngine["Intent Classifier (<1ms Regex + Domain Matching)"]
+    
+    IntentEngine -- "is_enterprise = False (Greeting, Smalltalk, Writing, Tech Q&A)" --> GeneralPath["General Chat Path"]
+    GeneralPath --> GeneralPrompt["Prompt: GENERAL_CHAT_SYSTEM_PROMPT + Conversation History"]
+    GeneralPrompt --> LLMGeneral["Ollama Local LLM (Qwen 2.5 3B)"]
+    LLMGeneral --> NaturalResponse["Phản hồi tự nhiên ChatGPT-like (sources: [], suggest_ticket: false)"]
 
-    subgraph GIAI ĐOẠN 2: TRUY VẤN VÀ TỔNG HỢP (RETRIEVAL & GENERATION)
-        UserQuery["Câu hỏi của Người dùng"] --> QueryEmbedder["Query Embedding (nomic-embed-text)"]
-        QueryEmbedder --> VectorSearch["Cosine Similarity Search (Top-K = 5)"]
-        Chroma -.-> VectorSearch
-        VectorSearch --> RelevanceFilter{"Kiểm tra Ngưỡng tương đồng (Threshold >= 0.65)"}
-        
-        RelevanceFilter -- "Không đạt ngưỡng" --> FallbackResponse["Phản hồi: Không tìm thấy tài liệu nội bộ + Đề xuất tạo IT Ticket"]
-        
-        RelevanceFilter -- "Đạt ngưỡng tin cậy" --> PromptBuilder["Xây dựng Prompt: System Instructions + Chunks Context + Question"]
-        PromptBuilder --> LocalLLM["Local LLM (Qwen3 4B qua Ollama)"]
-        LocalLLM --> AnswerParser["Trích xuất câu trả lời & Ghép nối Source Citations"]
-        AnswerParser --> FinalOutput["Câu trả lời hoàn chỉnh + Trích dẫn nguồn"]
-    end
+    IntentEngine -- "is_enterprise = True (IT, HR, Finance, Policy...)" --> RAGPath["Enterprise RAG Path"]
+    RAGPath --> MemoryReform["Conversation Memory: Query Contextualization"]
+    MemoryReform --> HybridRetrieval["Hybrid Retrieval: ChromaDB Vector + BM25 Sparse"]
+    HybridRetrieval --> ACLCheck{"Enterprise ACL & Permission Filter"}
+    ACLCheck --> FlashRank["FlashRank Cross-Encoder Reranker (Top-3)"]
+    FlashRank --> AntiInjection["Prompt Encapsulation <company_context> + PII Masking"]
+    AntiInjection --> LLMRAG["Ollama Local LLM (Qwen 2.5 3B)"]
+    LLMRAG --> StructuredAnswer["Câu trả lời từng bước + Trích dẫn nguồn [1], [2] (Clean UTF-8)"]
 ```
 
 ---

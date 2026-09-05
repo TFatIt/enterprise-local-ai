@@ -1,0 +1,26 @@
+source_id,source_name,organization,authority_level,url,covered_domains,license
+SRC-01,Microsoft Learn,Microsoft Corporation,LEVEL 1 — OFFICIAL VENDOR,https://learn.microsoft.com,"Windows, Office, Windows Server, PowerShell, M365",Official Vendor Public Docs
+SRC-02,Cisco Documentation,"Cisco Systems, Inc.",LEVEL 1 — OFFICIAL VENDOR,https://www.cisco.com/c/en/us/support/index.html,"Networking, Routing, Switching, IOS, Security",Official Vendor Public Docs
+SRC-03,Canonical Ubuntu Documentation,Canonical Ltd.,LEVEL 1 — OFFICIAL VENDOR,https://ubuntu.com/server/docs,"Linux, Server Admin, systemd, SSH, Samba, UFW",Open Source / Vendor
+SRC-04,Red Hat Customer Portal,"Red Hat, Inc.",LEVEL 1 — OFFICIAL VENDOR,https://access.redhat.com/documentation,"Enterprise Linux, Ansible, RHEL, OpenShift",Official Vendor Public Guides
+SRC-05,PostgreSQL Global Development Group,PostgreSQL Community,LEVEL 1 — OFFICIAL VENDOR,https://www.postgresql.org/docs/16/,"PostgreSQL Database Engine, SQL, MVCC, Replication",PostgreSQL License (Open)
+SRC-06,Docker Documentation,Docker Inc.,LEVEL 1 — OFFICIAL VENDOR,https://docs.docker.com,"Container Engine, Dockerfile, Docker Compose",Apache 2.0 / Open Docs
+SRC-07,Kubernetes Documentation,Cloud Native Computing Foundation (CNCF),LEVEL 1 — OFFICIAL VENDOR,https://kubernetes.io/docs/,"Container Orchestration, K8s Architecture, RBAC",CC BY 4.0
+SRC-08,VMware by Broadcom,Broadcom Inc.,LEVEL 1 — OFFICIAL VENDOR,https://docs.vmware.com,"vSphere, ESXi, vCenter, Virtualization",Official Vendor Docs
+SRC-09,Fortinet Document Library,"Fortinet, Inc.",LEVEL 1 — OFFICIAL VENDOR,https://docs.fortinet.com,"FortiGate, Network Firewall, SSL-VPN, Security",Official Vendor Docs
+SRC-10,MikroTik Documentation,MikroTikls SIA,LEVEL 1 — OFFICIAL VENDOR,https://help.mikrotik.com/docs/,"RouterOS, Switching, Wireless, BGP, OSPF",Official Vendor Docs
+SRC-11,IETF RFC Standards,Internet Engineering Task Force,LEVEL 3 — STANDARDS,https://datatracker.ietf.org/doc/,"TCP/IP, IPv4, IPv6, DHCP, DNS, TLS, BGP, OSPF",IETF Trust / Public Standard
+SRC-12,NIST Computer Security Resource Center,National Institute of Standards and Technology (USA),LEVEL 3 — STANDARDS,https://csrc.nist.gov,"NIST CSF, SP 800-53, SP 800-61, SP 800-63",US Government Public Domain
+SRC-13,OWASP Foundation,Open Web Application Security Project,LEVEL 3 — STANDARDS,https://owasp.org,"OWASP Top 10, API Security, Security Cheat Sheets",CC BY-SA 4.0 / Creative Commons
+SRC-14,Center for Internet Security (CIS),CIS,LEVEL 3 — STANDARDS,https://www.cisecurity.org,"CIS Critical Security Controls v8, CIS Benchmarks",CIS Public Terms
+SRC-15,Cổng Thông tin Điện tử Chính Phủ Việt Nam,Chính phủ Nước CHXHCN Việt Nam,LEVEL 2 — GOVERNMENT,https://chinhphu.vn,"Luật ATTT, Luật ANM, Nghị định 13 PDPD, Luật DN",Vietnam Public Legal Data
+SRC-16,Cơ sở Dữ liệu Quốc gia về Văn bản Pháp luật,Bộ Tư pháp Việt Nam,LEVEL 2 — GOVERNMENT,https://vbpl.vn,Văn bản quy phạm pháp luật Việt Nam,Vietnam Government Public Domain
+SRC-17,Cổng Thông tin Điện tử Bộ Tài Chính,Bộ Tài chính Việt Nam,LEVEL 2 — GOVERNMENT,https://mof.gov.vn,"Luật Kế toán, Thông tư 200, TT 133, Chế độ BCTC",Vietnam Government Public Domain
+SRC-18,Cổng Thông tin Tổng Cục Thuế,Tổng cục Thuế Việt Nam,LEVEL 2 — GOVERNMENT,https://gdt.gov.vn,"Hóa đơn điện tử NĐ 123, TT 78, Thuế GTGT, TNDN, TNCN",Vietnam Government Public Domain
+SRC-19,Cổng Thông tin Bộ Lao động - TB&XH,Bộ Lao động - Thương binh và Xã hội,LEVEL 2 — GOVERNMENT,https://molisa.gov.vn,"Bộ luật Lao động, Nghị định 145, An toàn VSLĐ",Vietnam Government Public Domain
+SRC-20,Hệ thống Mạng Đấu thầu Quốc gia,Bộ Kế hoạch và Đầu tư,LEVEL 2 — GOVERNMENT,https://muasamcong.mpi.gov.vn,"Luật Đấu thầu 2023, Mua sắm công, Đấu thầu qua mạng",Vietnam Government Public Domain
+SRC-21,Tổ chức Tiêu chuẩn hóa Quốc tế (ISO),ISO,LEVEL 3 — STANDARDS,https://www.iso.org,"ISO 9001 (QMS), ISO 27001 (ISMS), ISO 31000, ISO 22301",ISO Public Guidance
+SRC-22,Project Management Institute (PMI),PMI,LEVEL 4 — EDUCATIONAL & STANDARDS,https://www.pmi.org,"PMBOK Guide, Project Scheduling, Risk Management",PMI Public Materials
+SRC-23,Scrum.org,Scrum.org & Ken Schwaber,LEVEL 4 — EDUCATIONAL & STANDARDS,https://scrumguides.org,"The Scrum Guide 2020, Agile Product Management",CC BY-SA 4.0
+SRC-24,International Chamber of Commerce (ICC),ICC,LEVEL 3 — STANDARDS,https://iccwbo.org,Incoterms 2020 Rules for Domestic and International Trade,ICC Public Materials
+SRC-25,Git SCM Community,Software Freedom Conservancy,LEVEL 5 — OPEN SOURCE & COMMUNITY,https://git-scm.com,"Git Version Control, Branching Models, Workflows",GPL / MIT / CC BY 3.0

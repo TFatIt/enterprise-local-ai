@@ -145,7 +145,9 @@ Tài liệu này quy định chuẩn thiết kế API, cấu trúc URL, phương
 | `GET` | `/api/v1/chat/sessions` | Authenticated | Lấy danh sách các phiên trò chuyện của user |
 | `POST` | `/api/v1/chat/sessions` | Authenticated | Khởi tạo phiên trò chuyện mới |
 | `GET` | `/api/v1/chat/sessions/{id}/messages`| Authenticated | Lấy toàn bộ lịch sử tin nhắn trong phiên chat |
-| `POST` | `/api/v1/chat/sessions/{id}/messages`| Authenticated | Gửi câu hỏi cho AI (thực thi RAG Pipeline và trả về câu trả lời + nguồn) |
+| `POST` | `/api/v1/chat/sessions/{id}/messages`| Authenticated | Gửi tin nhắn (Dynamic Intent: General Chat hoặc Enterprise RAG) |
+| `POST` | `/api/v1/chat/sessions/{id}/messages/stream`| Authenticated | Gửi tin nhắn và nhận phản hồi Streaming qua Server-Sent Events (SSE) |
+| `POST` | `/api/v1/chat/sessions/{id}/messages/{msg_id}/feedback`| Authenticated | Gửi đánh giá phản hồi (rating 1-5 sao, ý kiến đóng góp) cho câu trả lời |
 | `DELETE` | `/api/v1/chat/sessions/{id}`| Authenticated | Xóa phiên trò chuyện |
 
 #### Ví dụ `POST /api/v1/chat/sessions/{id}/messages`

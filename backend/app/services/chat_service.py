@@ -1,6 +1,8 @@
-"""Service layer for Chat Sessions and AI Messages."""
+"""Service layer for Chat Sessions, AI Messages, and Dynamic Intent Routing."""
 
 import uuid
+import json
+import logging
 from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
@@ -10,7 +12,12 @@ from app.models.chat import ChatSession, ChatMessage
 from app.models.user import User
 from app.schemas.chat import ChatSessionCreate, ChatSessionUpdate, ChatMessageCreate
 from app.rag.pipeline import rag_pipeline
-from app.db.session import SessionLocal
+from app.rag.intent_classifier import intent_classifier
+from app.rag.conversation_memory import conversation_memory
+from app.services.audit_service import audit_service
+from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class ChatService:
@@ -36,7 +43,6 @@ class ChatService:
         skip: int = 0,
         limit: int = 50
     ) -> List[Dict[str, Any]]:
-        # Super admin can see all if needed, but in default chat view users see their own
         query = db.query(ChatSession).filter(ChatSession.user_id == user.id)
         sessions = query.order_by(ChatSession.updated_at.desc()).offset(skip).limit(limit).all()
 
@@ -61,7 +67,6 @@ class ChatService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Không tìm thấy phiên hội thoại"
             )
-        # Check permissions: owner or super admin
         role_name = user.role.name if user.role else ""
         if session.user_id != user.id and role_name != "SUPER_ADMIN":
             raise HTTPException(
@@ -116,6 +121,9 @@ class ChatService:
             cleaned_title = content.replace("\n", " ")
             session.title = cleaned_title[:40] + ("..." if len(cleaned_title) > 40 else "")
 
+        # Extract recent conversation history before saving current message
+        history = conversation_memory.get_recent_history(session.messages, max_messages=6)
+
         # 1. Save user question
         user_msg = ChatMessage(
             session_id=session.id,
@@ -126,31 +134,47 @@ class ChatService:
         db.add(user_msg)
         db.commit()
 
-        # Enforce enterprise access control in RAG
-        from app.core.config import settings
-        rag_result = rag_pipeline.ask(
-            question=content,
-            department_id=None,
-            top_k=settings.RAG_TOP_K,
-            user=user
-        )
+        # 2. Dynamic Intent Classification
+        intent_result = intent_classifier.classify(content)
+        logger.info(f"Chat intent classified: {intent_result.intent} (is_enterprise={intent_result.is_enterprise_query}, conf={intent_result.confidence})")
 
-        from app.services.audit_service import audit_service
+        # 3. Execution Routing: General Chat vs Enterprise Knowledge Base RAG
+        if not intent_result.is_enterprise_query:
+            # Bypass RAG vector retrieval entirely
+            ai_response = rag_pipeline.chat_general(
+                question=content,
+                history=history
+            )
+        else:
+            # Execute Enterprise RAG with ACL and contextual query reformulation
+            ai_response = rag_pipeline.ask(
+                question=content,
+                department_id=None,
+                top_k=settings.RAG_TOP_K,
+                user=user,
+                history=history
+            )
+
         audit_service.log_event(
             db=db,
-            action="RAG_QUERY",
+            action="CHAT_QUERY",
             resource="CHAT",
             user_id=user.id,
-            details={"query": content[:200], "source_count": len(rag_result.get("sources", []))}
+            details={
+                "query": content[:200],
+                "intent": intent_result.intent,
+                "is_enterprise": intent_result.is_enterprise_query,
+                "source_count": len(ai_response.get("sources", []))
+            }
         )
 
-        # 3. Save assistant response
+        # 4. Save assistant response
         assistant_msg = ChatMessage(
             session_id=session.id,
             sender_type="ASSISTANT",
-            content=rag_result.get("answer", ""),
-            sources=rag_result.get("sources", []),
-            response_time_ms=rag_result.get("response_time_ms", 0),
+            content=ai_response.get("answer", ""),
+            sources=ai_response.get("sources", []),
+            response_time_ms=ai_response.get("response_time_ms", 0),
         )
         db.add(assistant_msg)
 
@@ -164,7 +188,7 @@ class ChatService:
             "sender_type": assistant_msg.sender_type,
             "content": assistant_msg.content,
             "sources": assistant_msg.sources,
-            "suggest_ticket": rag_result.get("suggest_ticket", False),
+            "suggest_ticket": ai_response.get("suggest_ticket", False),
             "response_time_ms": assistant_msg.response_time_ms,
             "created_at": assistant_msg.created_at,
         }
@@ -177,7 +201,6 @@ class ChatService:
         message_in: ChatMessageCreate
     ):
         """Send message and yield Server-Sent Events (SSE) chunks, persisting result upon completion."""
-        import json
         session = ChatService.get_session_by_id(db, session_id, user)
 
         if not session.is_active:
@@ -193,6 +216,9 @@ class ChatService:
             cleaned_title = content.replace("\n", " ")
             session.title = cleaned_title[:40] + ("..." if len(cleaned_title) > 40 else "")
 
+        # Extract recent conversation history before saving current message
+        history = conversation_memory.get_recent_history(session.messages, max_messages=6)
+
         # 1. Save user question
         user_msg = ChatMessage(
             session_id=session.id,
@@ -203,22 +229,36 @@ class ChatService:
         db.add(user_msg)
         db.commit()
 
+        # 2. Dynamic Intent Classification
+        intent_result = intent_classifier.classify(content)
+        logger.info(f"Stream intent classified: {intent_result.intent} (is_enterprise={intent_result.is_enterprise_query})")
+
         db_bind = db.get_bind()
         session_id_val = session.id
+        user_id_val = user.id
 
-        # 2. Generator yielding SSE lines and persisting assistant response on 'done'
+        # 3. Generator yielding SSE lines and persisting assistant response on 'done'
         def sse_generator():
             full_answer = ""
             sources = []
             response_time_ms = 0
 
-            from app.core.config import settings
-            for sse_line in rag_pipeline.ask_stream(
-                question=content,
-                department_id=None,
-                top_k=settings.RAG_TOP_K,
-                user=user
-            ):
+            # Select stream source
+            if not intent_result.is_enterprise_query:
+                stream_iter = rag_pipeline.chat_general_stream(
+                    question=content,
+                    history=history
+                )
+            else:
+                stream_iter = rag_pipeline.ask_stream(
+                    question=content,
+                    department_id=None,
+                    top_k=settings.RAG_TOP_K,
+                    user=user,
+                    history=history
+                )
+
+            for sse_line in stream_iter:
                 yield sse_line
                 if sse_line.startswith("data: "):
                     try:
@@ -230,7 +270,7 @@ class ChatService:
                     except Exception:
                         pass
 
-            # 3. Persist assistant message in DB using dedicated session bound to active engine
+            # 4. Persist assistant message in DB using dedicated session
             try:
                 from sqlalchemy.orm import sessionmaker
                 DedicatedSession = sessionmaker(autocommit=False, autoflush=False, bind=db_bind)
@@ -247,11 +287,89 @@ class ChatService:
                     if db_sess:
                         db_sess.updated_at = datetime.now(timezone.utc)
                     write_db.commit()
+
+                    # Audit log for stream response
+                    audit_service.log_event(
+                        db=write_db,
+                        action="CHAT_STREAM_QUERY",
+                        resource="CHAT",
+                        user_id=user_id_val,
+                        details={
+                            "query": content[:200],
+                            "intent": intent_result.intent,
+                            "is_enterprise": intent_result.is_enterprise_query,
+                            "source_count": len(sources)
+                        }
+                    )
             except Exception as e:
-                import logging
-                logging.getLogger(__name__).error(f"Failed to persist assistant message in stream: {e}")
+                logger.error(f"Failed to persist assistant message in stream: {e}")
 
         return sse_generator()
+
+    @staticmethod
+    def submit_feedback(
+        db: Session,
+        session_id: uuid.UUID,
+        message_id: uuid.UUID,
+        user: User,
+        rating: int,
+        comment: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Record user feedback (rating 1-5 or thumbs up/down) for an assistant message."""
+        # Validate session ownership
+        ChatService.get_session_by_id(db, session_id, user)
+
+        message = db.query(ChatMessage).filter(
+            ChatMessage.id == message_id,
+            ChatMessage.session_id == session_id
+        ).first()
+
+        if not message:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Không tìm thấy tin nhắn cần gửi phản hồi"
+            )
+
+        # Store feedback in audit log and message sources metadata
+        feedback_data = {
+            "rating": rating,
+            "comment": comment or "",
+            "submitted_at": datetime.now(timezone.utc).isoformat(),
+            "user_id": str(user.id)
+        }
+
+        # Safely attach to sources if list
+        current_sources = list(message.sources or [])
+        # Check if feedback item already exists, update or append
+        updated = False
+        for item in current_sources:
+            if isinstance(item, dict) and "_feedback" in item:
+                item["_feedback"] = feedback_data
+                updated = True
+                break
+        if not updated:
+            current_sources.append({"_feedback": feedback_data})
+
+        message.sources = current_sources
+        db.commit()
+
+        audit_service.log_event(
+            db=db,
+            action="MESSAGE_FEEDBACK",
+            resource="CHAT",
+            user_id=user.id,
+            details={
+                "message_id": str(message_id),
+                "rating": rating,
+                "comment": comment or ""
+            }
+        )
+
+        return {
+            "status": "success",
+            "message_id": str(message_id),
+            "feedback": feedback_data
+        }
 
 
 chat_service = ChatService()

@@ -31,6 +31,7 @@ class DocumentService:
         ".txt": "TXT",
         ".xlsx": "XLSX",
         ".csv": "CSV",
+        ".md": "TXT",
     }
 
     @staticmethod

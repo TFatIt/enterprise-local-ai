@@ -1,0 +1,4 @@
+duplicate_id,title,department,duplicate_url,retained_master_id,resolution_action
+DUP-001,Cisco IOS OSPF Guide (Duplicate Mirror),IT_NETWORK,https://mirror1.networkdocs.org/ospf.pdf,DOC-NET-004,Exact duplicate of official Cisco documentation; retained official Cisco URL.
+DUP-002,Luat An toan thong tin mang (Copy khác tên),LEGAL,https://thuvienphapluat.vn/van-ban/Cong-nghe-thong-tin/Luat-an-toan-thong-tin-mang-2015-298375.aspx,DOC-LEGAL-001,Retained official Vanban.chinhphu.vn version; flagged duplicate.
+DUP-003,NIST SP 800-53 Rev 5 Draft mirror,IT_SECURITY,https://unofficial-mirror.org/nist-800-53.pdf,DOC-SEC-002,Draft mirror superseded by official Final Release on csrc.nist.gov.

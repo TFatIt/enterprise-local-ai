@@ -15,6 +15,7 @@ from app.schemas.chat import (
     ChatSessionDetailResponse,
     ChatMessageCreate,
     ChatMessageResponse,
+    MessageFeedbackCreate,
 )
 from app.services.chat_service import chat_service
 
@@ -159,3 +160,24 @@ def get_session_messages(
 ):
     session = chat_service.get_session_by_id(db, session_id, current_user)
     return session.messages
+
+
+@router.post(
+    "/sessions/{session_id}/messages/{message_id}/feedback",
+    summary="Gửi đánh giá (feedback) cho câu trả lời của Trợ lý AI"
+)
+def submit_message_feedback(
+    session_id: uuid.UUID,
+    message_id: uuid.UUID,
+    feedback_in: MessageFeedbackCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return chat_service.submit_feedback(
+        db=db,
+        session_id=session_id,
+        message_id=message_id,
+        user=current_user,
+        rating=feedback_in.rating,
+        comment=feedback_in.comment
+    )
