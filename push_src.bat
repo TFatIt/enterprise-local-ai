@@ -15,11 +15,11 @@ cd /d "%ROOT_DIR%"
 
 :: 1. Kiem tra Git
 where git >nul 2>&1
-if %errorlevel% neq 0 (
+if !errorlevel! neq 0 (
     echo [ERROR] Git chua duoc cai dat hoac chua co trong PATH.
     echo Vui long cai dat Git: https://git-scm.com/
     echo.
-    pause
+    if not "%~2"=="--no-pause" pause
     exit /b 1
 )
 
@@ -59,47 +59,35 @@ git status --short
 echo ---------------------------------------------------------------------
 echo.
 
-:: 6. Dua tat ca tep vao staging
+:: 6. Dua tat ca tep vao staging va commit
 echo [*] Dang chuan bi tep (git add -A)...
 git add -A
-if %errorlevel% neq 0 (
-    echo [ERROR] Thao tac git add that bai!
-    pause
-    exit /b 1
-)
 
-:: 7. Tao commit
-git diff --cached --quiet
-if %errorlevel% neq 0 (
-    echo [*] Dang tao commit moi...
-    git commit -m "!COMMIT_MSG!"
-    if %errorlevel% neq 0 (
-        echo [ERROR] Khong the tao commit!
-        pause
-        exit /b 1
-    )
+echo [*] Kiem tra va commit ma nguon...
+git commit -m "!COMMIT_MSG!" >nul 2>&1
+if !errorlevel! equ 0 (
     echo [OK] Da tao commit thanh cong.
 ) else (
-    echo [INFO] Khong co tep ma nguon moi can commit.
+    echo [INFO] Working tree da sach hoac khong co thay doi moi.
 )
 
-:: 8. Dong bo rebase tu Remote truoc khi day
+:: 7. Dong bo rebase tu Remote truoc khi day
 echo.
-echo [*] Kiem tra va keo cap nhat moi tu GitHub (git pull --rebase)...
+echo [*] Kiem tra va dong bo tu GitHub (git pull --rebase)...
 git pull origin !BRANCH! --rebase
-if %errorlevel% neq 0 (
-    echo [WARN] Rebase gap canh bao hoac xung dot. Hoan tac rebase de bao ve code local...
+if !errorlevel! neq 0 (
+    echo [WARN] Rebase gap canh bao. Hoan tac rebase de bao ve code local...
     git rebase --abort >nul 2>&1
 )
 
-:: 9. Day code len GitHub
+:: 8. Day code len GitHub
 echo.
 echo =====================================================================
 echo [*] Dang day source code len GitHub (origin/!BRANCH!)...
 echo =====================================================================
 git push -u origin !BRANCH!
 
-if %errorlevel% equ 0 (
+if !errorlevel! equ 0 (
     echo.
     echo =====================================================================
     echo [THANH CONG] DA DAY TOAN BO SOURCE CODE LEN GITHUB THANH CONG!
@@ -121,6 +109,4 @@ if %errorlevel% equ 0 (
 )
 
 echo.
-if "%~2"=="--no-pause" goto end
-pause
-:end
+if not "%~2"=="--no-pause" pause
