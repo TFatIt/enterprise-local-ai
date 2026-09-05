@@ -33,8 +33,9 @@ class OllamaEmbeddings:
             "prompt": text.strip()
         }
 
+        timeout_config = httpx.Timeout(connect=15.0, read=60.0, write=30.0, pool=30.0)
         try:
-            with httpx.Client(timeout=self.timeout) as client:
+            with httpx.Client(timeout=timeout_config) as client:
                 response = client.post(url, json=payload)
                 response.raise_for_status()
                 data = response.json()
@@ -47,11 +48,30 @@ class OllamaEmbeddings:
             raise e
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        """Batch generate embeddings for multiple chunks."""
+        """Batch generate embeddings for multiple chunks reusing HTTP connection pool."""
         embeddings = []
-        for text in texts:
-            vec = self.embed_text(text)
-            embeddings.append(vec)
+        url = f"{self.base_url}/api/embeddings"
+        timeout_config = httpx.Timeout(connect=15.0, read=60.0, write=30.0, pool=30.0)
+        with httpx.Client(timeout=timeout_config) as client:
+            for text in texts:
+                if not text or not text.strip():
+                    embeddings.append([0.0] * 768)
+                    continue
+                payload = {
+                    "model": self.model_name,
+                    "prompt": text.strip()
+                }
+                try:
+                    response = client.post(url, json=payload)
+                    response.raise_for_status()
+                    data = response.json()
+                    embedding = data.get("embedding", [])
+                    if not embedding:
+                        raise ValueError(f"Ollama returned empty embedding for model {self.model_name}")
+                    embeddings.append(embedding)
+                except Exception as e:
+                    logger.error(f"Failed to generate embedding in batch ({e})")
+                    raise e
         return embeddings
 
     def embed_query(self, query: str) -> List[float]:

@@ -33,8 +33,13 @@ dist-ssr/
 # Database & Vector Store local data
 *.sqlite3
 *.db
+*.db-shm
+*.db-wal
+*.db-journal
 chroma_data/
 postgres_data/
+models_cache/
+scratch/
 
 # Uploaded documents storage
 uploads/

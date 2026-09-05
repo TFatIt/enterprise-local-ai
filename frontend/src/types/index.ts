@@ -1,13 +1,28 @@
+export type UserStatus = 'ACTIVE' | 'INACTIVE' | 'LOCKED' | 'SUSPENDED' | 'PENDING';
+
 export interface Role {
   id: number;
   name: string;
   code: string;
+  description?: string;
+  is_system_role?: boolean;
+  permissions?: PermissionItem[];
 }
 
 export interface Department {
   id: number;
   name: string;
   code: string;
+  description?: string;
+  user_count?: number;
+}
+
+export interface PermissionItem {
+  id: number;
+  code: string;
+  name: string;
+  description?: string;
+  category: string;
 }
 
 export interface User {
@@ -15,11 +30,43 @@ export interface User {
   username: string;
   email: string;
   full_name: string;
+  employee_code?: string;
+  phone?: string;
   phone_number?: string;
+  position?: string;
   role: string | Role;
+  role_name?: string;
+  department_id?: number;
   department?: string | Department | null;
+  status?: UserStatus;
   is_active: boolean;
+  avatar?: string;
+  last_login_at?: string;
   created_at?: string;
+  updated_at?: string;
+  permissions?: string[];
+  force_password_change?: boolean;
+}
+
+export interface UserStats {
+  total_users: number;
+  active_users: number;
+  inactive_users: number;
+  locked_users: number;
+  pending_users: number;
+  total_departments: number;
+  it_users: number;
+  admin_users: number;
+}
+
+export interface UserActivityItem {
+  id: number;
+  action: string;
+  resource: string;
+  result: string;
+  details: Record<string, any>;
+  ip_address?: string;
+  created_at: string;
 }
 
 export interface AuthResponse {
@@ -61,17 +108,67 @@ export interface ChatSession {
   message_count: number;
 }
 
+export type SecurityLevel = 'PUBLIC' | 'INTERNAL' | 'DEPARTMENT' | 'CONFIDENTIAL';
+export type DocumentType = 'SOP' | 'POLICY' | 'PROCEDURE' | 'GUIDE' | 'MANUAL' | 'REPORT' | 'FORM' | 'SPECIFICATION' | 'OTHER';
+
+export interface DocumentPermissionItem {
+  id: string;
+  document_id: string;
+  user_id?: string;
+  user_name?: string;
+  user_email?: string;
+  role_id?: number;
+  role_code?: string;
+  role_name?: string;
+  permission_type: 'VIEW' | 'EDIT' | 'MANAGE';
+  created_at: string;
+}
+
+export interface DocumentVersionItem {
+  id: string;
+  document_id: string;
+  version_number: string;
+  file_name: string;
+  file_size: number;
+  change_notes?: string;
+  created_by?: string;
+  creator_name?: string;
+  created_at: string;
+}
+
 export interface DocumentItem {
   id: string;
   title: string;
   file_name: string;
-  file_size_bytes: number;
-  mime_type: string;
+  file_type?: string;
+  file_size?: number;
+  file_size_bytes?: number;
+  mime_type?: string;
   department_id?: number;
   department_name?: string;
-  chunk_count: number;
-  is_indexed: boolean;
+  department_code?: string;
+  document_type?: string;
+  category?: string;
+  owner_id?: string;
+  owner_name?: string;
+  uploaded_by?: string;
+  uploader_name?: string;
+  security_level?: SecurityLevel;
+  visibility?: boolean;
+  version?: string;
+  status?: string;
+  rag_status?: string;
+  total_chunks?: number;
+  chunk_count?: number;
+  error_message?: string;
+  approved_at?: string;
+  approved_by?: string;
+  approved_by_name?: string;
   created_at: string;
+  updated_at?: string;
+  can_edit?: boolean;
+  can_delete?: boolean;
+  can_manage_permissions?: boolean;
 }
 
 export interface TicketComment {
@@ -131,4 +228,24 @@ export interface DashboardAnalytics {
     user_name: string;
     created_at: string;
   }[];
+}
+
+export interface KnowledgeGapItem {
+  id: string;
+  topic: string;
+  sample_query: string;
+  department_code: string;
+  department_name: string;
+  query_count: number;
+  last_queried_at: string;
+  suggested_action: string;
+  status: 'OPEN' | 'RESOLVED';
+  has_matching_doc: boolean;
+}
+
+export interface KnowledgeGapResponse {
+  total_gaps: number;
+  open_gaps: number;
+  resolved_gaps: number;
+  items: KnowledgeGapItem[];
 }

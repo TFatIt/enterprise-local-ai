@@ -51,3 +51,27 @@ class DashboardAnalyticsResponse(BaseModel):
     tickets_by_status: List[StatusCount]
     tickets_by_priority: List[PriorityCount]
     recent_activities: List[RecentActivityItem]
+
+
+class KnowledgeGapItem(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    topic: str
+    sample_query: str
+    department_code: str
+    department_name: str
+    query_count: int
+    last_queried_at: str
+    suggested_action: str
+    status: str  # OPEN, RESOLVED
+    has_matching_doc: bool
+
+
+class KnowledgeGapResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    total_gaps: int
+    open_gaps: int
+    resolved_gaps: int
+    items: List[KnowledgeGapItem]

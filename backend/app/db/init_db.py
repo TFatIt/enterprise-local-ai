@@ -16,6 +16,9 @@ def init_db() -> None:
     Base.metadata.create_all(bind=engine)
     logger.info("Tables created or already exist.")
 
+    from app.db.migrate_user_management import run_migration
+    run_migration()
+
     db = SessionLocal()
     try:
         seed_database(db)

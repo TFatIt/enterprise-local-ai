@@ -40,15 +40,18 @@ class OllamaLLM:
             "prompt": prompt,
             "system": system_prompt or "",
             "stream": False,
+            "keep_alive": "24h",
             "options": {
                 "temperature": self.temperature,
                 "top_p": self.top_p,
                 "num_ctx": self.num_ctx,
+                "num_predict": 768,
             }
         }
 
+        timeout_config = httpx.Timeout(connect=15.0, read=180.0, write=30.0, pool=30.0)
         try:
-            with httpx.Client(timeout=self.timeout) as client:
+            with httpx.Client(timeout=timeout_config) as client:
                 response = client.post(url, json=payload)
                 response.raise_for_status()
                 data = response.json()
@@ -75,15 +78,18 @@ class OllamaLLM:
             "prompt": prompt,
             "system": system_prompt or "",
             "stream": True,
+            "keep_alive": "24h",
             "options": {
                 "temperature": self.temperature,
                 "top_p": self.top_p,
                 "num_ctx": self.num_ctx,
+                "num_predict": 768,
             }
         }
 
+        timeout_config = httpx.Timeout(connect=15.0, read=180.0, write=30.0, pool=30.0)
         try:
-            with httpx.Client(timeout=self.timeout) as client:
+            with httpx.Client(timeout=timeout_config) as client:
                 with client.stream("POST", url, json=payload) as response:
                     response.raise_for_status()
                     for line in response.iter_lines():

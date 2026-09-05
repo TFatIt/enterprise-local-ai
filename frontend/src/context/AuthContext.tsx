@@ -8,9 +8,14 @@ interface AuthContextType {
   loading: boolean;
   login: (usernameOrEmail: string, password: string) => Promise<User>;
   logout: () => void;
+  updateCurrentUser: (updatedUser: User) => void;
   isSuperAdmin: boolean;
+  isAdmin: boolean;
   isITAdmin: boolean;
+  isManager: boolean;
+  isDeptManager: boolean;
   isEmployee: boolean;
+  canManageDocuments: boolean;
   roleCode: string;
 }
 
@@ -22,23 +27,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return saved ? JSON.parse(saved) : null;
   });
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('access_token'));
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(() => {
+    const hasToken = !!localStorage.getItem('access_token');
+    const hasUser = !!localStorage.getItem('user');
+    // Only show loading if there is a token to verify and no cached user
+    return hasToken && !hasUser;
+  });
 
   useEffect(() => {
+    let isMounted = true;
     const initAuth = async () => {
       const storedToken = localStorage.getItem('access_token');
-      if (storedToken) {
-        try {
-          const resp = await api.get<User>('/auth/me');
+      if (!storedToken) {
+        if (isMounted) {
+          setUser(null);
+          setLoading(false);
+        }
+        return;
+      }
+      try {
+        const resp = await api.get<User>('/auth/me');
+        if (isMounted) {
           setUser(resp.data);
           localStorage.setItem('user', JSON.stringify(resp.data));
-        } catch {
+        }
+      } catch {
+        if (isMounted) {
           logout();
         }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-      setLoading(false);
     };
     initAuth();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const login = async (usernameOrEmail: string, password: string): Promise<User> => {
@@ -65,6 +91,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
   };
 
+  const updateCurrentUser = (updatedUser: User) => {
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
+
   const getRoleCode = (role: any): string => {
     if (!role) return 'EMPLOYEE';
     if (typeof role === 'string') return role;
@@ -73,8 +104,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const roleCode = getRoleCode(user?.role);
   const isSuperAdmin = roleCode === 'SUPER_ADMIN';
+  const isAdmin = roleCode === 'ADMIN' || roleCode === 'SUPER_ADMIN' || roleCode === 'IT_ADMIN';
   const isITAdmin = roleCode === 'IT_ADMIN';
+  const isManager = roleCode === 'MANAGER';
+  const isDeptManager = roleCode === 'DEPARTMENT_MANAGER';
   const isEmployee = roleCode === 'EMPLOYEE';
+  const canManageDocuments = isAdmin || isDeptManager;
 
   return (
     <AuthContext.Provider
@@ -84,9 +119,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loading,
         login,
         logout,
+        updateCurrentUser,
         isSuperAdmin,
+        isAdmin,
         isITAdmin,
+        isManager,
+        isDeptManager,
         isEmployee,
+        canManageDocuments,
         roleCode,
       }}
     >

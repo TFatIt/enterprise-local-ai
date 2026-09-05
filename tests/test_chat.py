@@ -179,7 +179,7 @@ def test_send_message_and_rag_interaction(monkeypatch):
     }
 
     from app.services.chat_service import rag_pipeline
-    monkeypatch.setattr(rag_pipeline, "ask", lambda question, department_id, top_k=5: mock_rag_response)
+    monkeypatch.setattr(rag_pipeline, "ask", lambda question, department_id=None, top_k=5, **kwargs: mock_rag_response)
 
     # 1. Create a fresh session with default title
     session_resp = client.post("/api/v1/chat/sessions", json={}, headers=headers)

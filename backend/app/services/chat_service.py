@@ -10,6 +10,7 @@ from app.models.chat import ChatSession, ChatMessage
 from app.models.user import User
 from app.schemas.chat import ChatSessionCreate, ChatSessionUpdate, ChatMessageCreate
 from app.rag.pipeline import rag_pipeline
+from app.db.session import SessionLocal
 
 
 class ChatService:
@@ -125,12 +126,22 @@ class ChatService:
         db.add(user_msg)
         db.commit()
 
-        # Super Admin and IT Admin search across all departments; Employees search department + company-wide
-        search_dept = user.department_id if (user.role and user.role.code == "EMPLOYEE") else None
+        # Enforce enterprise access control in RAG
+        from app.core.config import settings
         rag_result = rag_pipeline.ask(
             question=content,
-            department_id=search_dept,
-            top_k=5
+            department_id=None,
+            top_k=settings.RAG_TOP_K,
+            user=user
+        )
+
+        from app.services.audit_service import audit_service
+        audit_service.log_event(
+            db=db,
+            action="RAG_QUERY",
+            resource="CHAT",
+            user_id=user.id,
+            details={"query": content[:200], "source_count": len(rag_result.get("sources", []))}
         )
 
         # 3. Save assistant response
@@ -192,17 +203,21 @@ class ChatService:
         db.add(user_msg)
         db.commit()
 
+        db_bind = db.get_bind()
+        session_id_val = session.id
+
         # 2. Generator yielding SSE lines and persisting assistant response on 'done'
         def sse_generator():
             full_answer = ""
             sources = []
             response_time_ms = 0
 
-            search_dept = user.department_id if (user.role and user.role.code == "EMPLOYEE") else None
+            from app.core.config import settings
             for sse_line in rag_pipeline.ask_stream(
                 question=content,
-                department_id=search_dept,
-                top_k=5
+                department_id=None,
+                top_k=settings.RAG_TOP_K,
+                user=user
             ):
                 yield sse_line
                 if sse_line.startswith("data: "):
@@ -215,20 +230,26 @@ class ChatService:
                     except Exception:
                         pass
 
-            # 3. Persist assistant message in DB
+            # 3. Persist assistant message in DB using dedicated session bound to active engine
             try:
-                assistant_msg = ChatMessage(
-                    session_id=session.id,
-                    sender_type="ASSISTANT",
-                    content=full_answer,
-                    sources=sources,
-                    response_time_ms=response_time_ms,
-                )
-                db.add(assistant_msg)
-                session.updated_at = datetime.now(timezone.utc)
-                db.commit()
-            except Exception:
-                db.rollback()
+                from sqlalchemy.orm import sessionmaker
+                DedicatedSession = sessionmaker(autocommit=False, autoflush=False, bind=db_bind)
+                with DedicatedSession() as write_db:
+                    assistant_msg = ChatMessage(
+                        session_id=session_id_val,
+                        sender_type="ASSISTANT",
+                        content=full_answer,
+                        sources=sources,
+                        response_time_ms=response_time_ms,
+                    )
+                    write_db.add(assistant_msg)
+                    db_sess = write_db.query(ChatSession).filter(ChatSession.id == session_id_val).first()
+                    if db_sess:
+                        db_sess.updated_at = datetime.now(timezone.utc)
+                    write_db.commit()
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Failed to persist assistant message in stream: {e}")
 
         return sse_generator()
 

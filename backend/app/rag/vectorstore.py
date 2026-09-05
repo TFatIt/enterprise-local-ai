@@ -74,65 +74,112 @@ class ChromaVectorStore:
         except Exception as e:
             logger.warning(f"Error deleting Chroma chunks for document {document_id}: {e}")
 
+    def is_chunk_accessible(self, meta: Dict[str, Any], user: Optional[Any], user_dept_id: Optional[int] = None) -> bool:
+        """Check if retrieved chunk is strictly accessible by user according to Enterprise ACL."""
+        if user is None:
+            # Fallback for callers passing department_id directly
+            if user_dept_id is not None and user_dept_id > 0:
+                chunk_dept = int(meta.get("department_id", 0))
+                sec = str(meta.get("security_level", "DEPARTMENT")).upper()
+                if sec == "PUBLIC":
+                    return True
+                if sec == "CONFIDENTIAL":
+                    return False
+                return chunk_dept == 0 or chunk_dept == user_dept_id
+            return True
+
+        role_code = getattr(user.role, "code", "EMPLOYEE") if hasattr(user, "role") and user.role else "EMPLOYEE"
+        if role_code in ("SUPER_ADMIN", "ADMIN", "IT_ADMIN"):
+            return True
+
+        sec = str(meta.get("security_level", "DEPARTMENT")).upper()
+        chunk_dept = int(meta.get("department_id", 0))
+        allowed_users = str(meta.get("allowed_users", "")).split(",")
+        allowed_roles = str(meta.get("allowed_roles", "")).split(",")
+
+        # Check explicit permissions
+        user_id_str = str(getattr(user, "id", ""))
+        if user_id_str and user_id_str in allowed_users:
+            return True
+        if role_code in allowed_roles:
+            return True
+
+        # Confidential chunks require explicit grant
+        if sec == "CONFIDENTIAL":
+            return False
+
+        if sec == "PUBLIC":
+            return True
+
+        if sec == "INTERNAL":
+            return role_code != "VIEWER"
+
+        if sec == "DEPARTMENT":
+            if role_code == "MANAGER":
+                return True
+            curr_dept = getattr(user, "department_id", None)
+            return bool(curr_dept and curr_dept == chunk_dept)
+
+        return False
+
     def similarity_search(
         self,
         query_vector: List[float],
         top_k: int = 5,
-        department_id: Optional[int] = None
+        department_id: Optional[int] = None,
+        user: Optional[Any] = None
     ) -> List[Dict[str, Any]]:
-        """Perform Cosine similarity search and compute similarity scores."""
+        """Perform Cosine similarity search with Enterprise Permission & Department ACL."""
         count = self.collection.count()
         if count == 0:
             return []
 
         actual_k = min(top_k, count)
-        where_filter = None
-        if department_id is not None and department_id > 0:
-            where_filter = {
-                "$or": [
-                    {"department_id": 0},
-                    {"department_id": department_id}
-                ]
-            }
-
-        # Query more candidates to allow deduplication of identical text chunks
-        query_k = min(actual_k * 3, count)
+        # Fetch generous candidate pool to allow strict ACL filtering and deduplication
+        query_k = min(max(actual_k * 10, 100), count)
 
         try:
             results = self.collection.query(
                 query_embeddings=[query_vector],
                 n_results=query_k,
-                where=where_filter,
                 include=["documents", "metadatas", "distances"]
             )
         except Exception as e:
-            logger.warning(f"Chroma query with filter failed, retrying without filter: {e}")
-            results = self.collection.query(
-                query_embeddings=[query_vector],
-                n_results=query_k,
-                include=["documents", "metadatas", "distances"]
-            )
+            logger.warning(f"Chroma query failed: {e}")
+            return []
 
         matched_chunks = []
         seen_texts = set()
+        doc_counts = {}
         docs = results.get("documents", [[]])[0]
         metas = results.get("metadatas", [[]])[0]
         distances = results.get("distances", [[]])[0]
 
         for doc_text, meta, dist in zip(docs, metas, distances):
-            # Enforce department ACL: if department_id specified, exclude other department chunks
-            chunk_dept = meta.get("department_id", 0)
+            # Enforce Enterprise Access Control
+            if not self.is_chunk_accessible(meta, user=user, user_dept_id=department_id):
+                continue
+
+            # If department_id was explicitly requested (e.g. via UI filter), filter by it
             if department_id is not None and department_id > 0:
+                chunk_dept = int(meta.get("department_id", 0))
                 if chunk_dept != 0 and chunk_dept != department_id:
                     continue
 
-            # Normalize text for deduplication
+            # Deduplication
             normalized_key = doc_text.strip()
             if normalized_key in seen_texts:
                 continue
             seen_texts.add(normalized_key)
 
-            # For cosine distance: distance = 1 - similarity => similarity = 1 - distance
+            # Document diversity: Allow up to 4 chunks (or top_k // 2) from the same document in top_k
+            max_per_doc = max(4, top_k // 2)
+            doc_key = str(meta.get("document_id") or meta.get("title", ""))
+            if doc_key and doc_counts.get(doc_key, 0) >= max_per_doc:
+                continue
+            doc_counts[doc_key] = doc_counts.get(doc_key, 0) + 1
+
+            # Cosine distance: similarity = 1 - distance
             similarity = max(0.0, min(1.0, 1.0 - dist))
             matched_chunks.append({
                 "content": doc_text,

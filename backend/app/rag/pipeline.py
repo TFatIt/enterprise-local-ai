@@ -9,6 +9,8 @@ from app.rag.embeddings import embeddings_client
 from app.rag.llm import llm_client
 from app.rag.vectorstore import vector_store
 from app.rag.bm25 import BM25Index, reciprocal_rank_fusion
+from app.rag.reranker import reranker
+from app.rag.pii_masker import pii_masker
 
 logger = logging.getLogger(__name__)
 
@@ -29,9 +31,9 @@ class RAGPipeline:
     )
 
     FALLBACK_RESPONSE = (
-        "Không tìm thấy thông tin đầy đủ trong tài liệu nội bộ của doanh nghiệp. "
+        "Không tìm thấy thông tin trong phạm vi tài liệu bạn được phép truy cập. "
         "Bạn vui lòng kiểm tra lại từ khóa hoặc bấm nút **Tạo IT Support Ticket** bên dưới "
-        "để gửi yêu cầu cho bộ phận Quản trị IT hỗ trợ trực tiếp."
+        "để gửi yêu cầu cho bộ phận chuyên trách hỗ trợ trực tiếp."
     )
 
     NEGATIVE_INDICATORS = [
@@ -43,6 +45,7 @@ class RAGPipeline:
         "không chứa thông tin",
         "không liên quan",
         "không thể trả lời",
+        "không có quyền",
     ]
 
     @classmethod
@@ -50,19 +53,21 @@ class RAGPipeline:
         cls,
         question: str,
         department_id: Optional[int] = None,
-        top_k: int = 5
+        top_k: int = 3,
+        user: Optional[Any] = None
     ) -> Dict[str, Any]:
-        """Execute end-to-end RAG workflow for a user question."""
+        """Execute end-to-end RAG workflow for a user question with permission awareness."""
         start_time = time.time()
 
         # 1. Embed user query
         query_vector = embeddings_client.embed_query(question)
 
-        # 2. Similarity search in ChromaDB (Dense)
+        # 2. Similarity search in ChromaDB with Enterprise ACL Filtering
         retrieved_chunks = vector_store.similarity_search(
             query_vector=query_vector,
-            top_k=top_k * 2,
-            department_id=department_id
+            top_k=max(top_k * 4, 12),
+            department_id=department_id,
+            user=user
         )
 
         # 2b. Sparse Keyword Search (BM25) & Reciprocal Rank Fusion (RRF)
@@ -81,13 +86,13 @@ class RAGPipeline:
                 logger.warning(f"BM25 hybrid fusion warning: {e}")
 
         # 3. Tier 1 Gate: Filter by similarity threshold
-        relevant_chunks = [
+        candidate_chunks = [
             c for c in retrieved_chunks
             if c.get("similarity_score", 0.0) >= settings.RAG_SIMILARITY_THRESHOLD
-        ][:top_k]
+        ]
 
         # Handle Vector-Level Out-Of-Context Fallback
-        if not relevant_chunks:
+        if not candidate_chunks:
             duration_ms = int((time.time() - start_time) * 1000)
             return {
                 "answer": cls.FALLBACK_RESPONSE,
@@ -95,6 +100,9 @@ class RAGPipeline:
                 "suggest_ticket": True,
                 "response_time_ms": duration_ms,
             }
+
+        # 3.5 Tier 1.5 Gate: Local Cross-Encoder Re-ranking
+        relevant_chunks = reranker.rerank(query=question, chunks=candidate_chunks, top_n=top_k)
 
         # 4. Build Context Prompt
         context_parts = []
@@ -118,14 +126,16 @@ class RAGPipeline:
                 "file_name": meta.get("file_name", ""),
                 "page_number": page,
                 "similarity_score": round(chunk.get("similarity_score", 0.0), 3),
-                "snippet": content[:250] + ("..." if len(content) > 250 else "")
+                "rerank_score": chunk.get("rerank_score"),
+                "snippet": content[:500] + ("..." if len(content) > 500 else "")
             })
 
         context_str = "\n\n---\n\n".join(context_parts)
+        sanitized_question = pii_masker.mask_pii(question)
         user_prompt = (
             f"NGỮ CẢNH TÀI LIỆU NỘI BỘ (CONTEXT):\n"
             f"---\n{context_str}\n---\n\n"
-            f"CÂU HỎI CỦA NHÂN VIÊN:\n{question}\n\n"
+            f"CÂU HỎI CỦA NHÂN VIÊN:\n{sanitized_question}\n\n"
             f"CÂU TRẢ LỜI:"
         )
 
@@ -160,20 +170,22 @@ class RAGPipeline:
         cls,
         question: str,
         department_id: Optional[int] = None,
-        top_k: int = 5
+        top_k: int = 3,
+        user: Optional[Any] = None
     ):
-        """Execute end-to-end RAG workflow yielding SSE chunks for real-time token streaming."""
+        """Execute end-to-end RAG workflow yielding SSE chunks with Enterprise Access Control."""
         import json
         start_time = time.time()
 
         # 1. Embed user query
         query_vector = embeddings_client.embed_query(question)
 
-        # 2. Similarity search in ChromaDB (Dense)
+        # 2. Similarity search in ChromaDB with Enterprise ACL Filtering
         retrieved_chunks = vector_store.similarity_search(
             query_vector=query_vector,
-            top_k=top_k * 2,
-            department_id=department_id
+            top_k=max(top_k * 4, 12),
+            department_id=department_id,
+            user=user
         )
 
         # 2b. Sparse Keyword Search (BM25) & Reciprocal Rank Fusion (RRF)
@@ -192,17 +204,20 @@ class RAGPipeline:
                 logger.warning(f"BM25 hybrid fusion warning: {e}")
 
         # 3. Tier 1 Gate: Filter by similarity threshold
-        relevant_chunks = [
+        candidate_chunks = [
             c for c in retrieved_chunks
             if c.get("similarity_score", 0.0) >= settings.RAG_SIMILARITY_THRESHOLD
-        ][:top_k]
+        ]
 
-        if not relevant_chunks:
+        if not candidate_chunks:
             duration_ms = int((time.time() - start_time) * 1000)
             yield f"data: {json.dumps({'type': 'metadata', 'sources': [], 'suggest_ticket': True})}\n\n"
             yield f"data: {json.dumps({'type': 'token', 'token': cls.FALLBACK_RESPONSE})}\n\n"
             yield f"data: {json.dumps({'type': 'done', 'response_time_ms': duration_ms, 'full_answer': cls.FALLBACK_RESPONSE, 'sources': [], 'suggest_ticket': True})}\n\n"
             return
+
+        # 3.5 Tier 1.5 Gate: Local Cross-Encoder Re-ranking
+        relevant_chunks = reranker.rerank(query=question, chunks=candidate_chunks, top_n=top_k)
 
         # 4. Build Context Prompt
         context_parts = []
@@ -226,23 +241,31 @@ class RAGPipeline:
                 "file_name": meta.get("file_name", ""),
                 "page_number": page,
                 "similarity_score": round(chunk.get("similarity_score", 0.0), 3),
-                "snippet": content[:250] + ("..." if len(content) > 250 else "")
+                "rerank_score": chunk.get("rerank_score"),
+                "snippet": content[:500] + ("..." if len(content) > 500 else "")
             })
 
         context_str = "\n\n---\n\n".join(context_parts)
+        sanitized_question = pii_masker.mask_pii(question)
         user_prompt = (
             f"NGỮ CẢNH TÀI LIỆU NỘI BỘ (CONTEXT):\n"
             f"---\n{context_str}\n---\n\n"
-            f"CÂU HỎI CỦA NHÂN VIÊN:\n{question}\n\n"
+            f"CÂU HỎI CỦA NHÂN VIÊN:\n{sanitized_question}\n\n"
             f"CÂU TRẢ LỜI:"
         )
 
         yield f"data: {json.dumps({'type': 'metadata', 'sources': sources, 'suggest_ticket': False})}\n\n"
 
         full_answer_acc = []
-        for token in llm_client.generate_stream(prompt=user_prompt, system_prompt=cls.SYSTEM_PROMPT):
-            full_answer_acc.append(token)
-            yield f"data: {json.dumps({'type': 'token', 'token': token})}\n\n"
+        try:
+            for token in llm_client.generate_stream(prompt=user_prompt, system_prompt=cls.SYSTEM_PROMPT):
+                full_answer_acc.append(token)
+                yield f"data: {json.dumps({'type': 'token', 'token': token})}\n\n"
+        except Exception as e:
+            logger.error(f"Error during LLM stream generation: {e}")
+            fallback_err = "\n\n[Hệ thống: Mô hình LLM nội bộ phản hồi quá lâu hoặc đang quá tải. Bạn có thể nhấn 'Tạo IT Ticket' để được hỗ trợ trực tiếp.]"
+            full_answer_acc.append(fallback_err)
+            yield f"data: {json.dumps({'type': 'token', 'token': fallback_err})}\n\n"
 
         full_answer = "".join(full_answer_acc).strip()
         duration_ms = int((time.time() - start_time) * 1000)

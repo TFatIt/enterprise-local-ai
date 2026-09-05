@@ -7,10 +7,13 @@ import { ChatPage } from './pages/ChatPage';
 import { DocumentsPage } from './pages/DocumentsPage';
 import { TicketsPage } from './pages/TicketsPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { UsersPage } from './pages/UsersPage';
+import { UserProfileModal } from './components/UserProfileModal';
 
 const MainLayout: React.FC = () => {
-  const { user, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState<'chat' | 'documents' | 'tickets' | 'dashboard'>('chat');
+  const { user, loading, updateCurrentUser } = useAuth();
+  const [activeTab, setActiveTab] = useState<'chat' | 'documents' | 'tickets' | 'dashboard' | 'users'>('chat');
+  const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
 
   // State when escalating chat to ticket
   const [chatTicketSessionId, setChatTicketSessionId] = useState<string | null>(null);
@@ -59,6 +62,11 @@ const MainLayout: React.FC = () => {
           title: 'Báo cáo & Phân tích Quản trị',
           subtitle: 'Theo dõi hiệu năng AI, tỷ lệ tự giải quyết sự cố và nhật ký vận hành',
         };
+      case 'users':
+        return {
+          title: 'Quản lý Tài khoản & Phân quyền Nội bộ',
+          subtitle: 'Quản lý danh tính nhân sự, phân quyền vai trò RBAC và phạm vi cô lập phòng ban',
+        };
     }
   };
 
@@ -66,7 +74,11 @@ const MainLayout: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-[#070a13] text-slate-100 overflow-hidden font-sans">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Sidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        onOpenProfile={() => setShowProfileModal(true)} 
+      />
 
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header title={headerInfo.title} subtitle={headerInfo.subtitle} />
@@ -86,9 +98,19 @@ const MainLayout: React.FC = () => {
               }}
             />
           )}
-          {activeTab === 'dashboard' && <DashboardPage />}
+          {activeTab === 'dashboard' && (
+            <DashboardPage onNavigateDocuments={() => setActiveTab('documents')} />
+          )}
+          {activeTab === 'users' && <UsersPage />}
         </div>
       </main>
+
+      <UserProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        currentUser={user}
+        onUserUpdated={(updated) => updateCurrentUser(updated)}
+      />
     </div>
   );
 };

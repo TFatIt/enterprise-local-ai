@@ -5,6 +5,7 @@ import {
   FileText, 
   Ticket, 
   BarChart3, 
+  Users,
   LogOut, 
   Cpu, 
   ShieldCheck, 
@@ -15,21 +16,34 @@ import {
 import { useAuth } from '../context/AuthContext';
 
 interface SidebarProps {
-  activeTab: 'chat' | 'documents' | 'tickets' | 'dashboard';
-  setActiveTab: (tab: 'chat' | 'documents' | 'tickets' | 'dashboard') => void;
+  activeTab: 'chat' | 'documents' | 'tickets' | 'dashboard' | 'users';
+  setActiveTab: (tab: 'chat' | 'documents' | 'tickets' | 'dashboard' | 'users') => void;
+  onOpenProfile?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onOpenProfile }) => {
   const { user, logout, isSuperAdmin, isITAdmin, roleCode } = useAuth();
 
   const deptName = typeof user?.department === 'string' ? user.department : user?.department?.name;
+
+  const canManageUsers = ['SUPER_ADMIN', 'ADMIN', 'IT_ADMIN', 'IT_MANAGER', 'DEPARTMENT_MANAGER'].includes(roleCode);
 
   const getRoleBadge = (code?: string) => {
     switch (code) {
       case 'SUPER_ADMIN':
         return <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30">Super Admin</span>;
+      case 'ADMIN':
+        return <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">Admin</span>;
       case 'IT_ADMIN':
-        return <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">IT Admin</span>;
+        return <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">IT Admin</span>;
+      case 'IT_MANAGER':
+        return <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-teal-500/20 text-teal-300 border border-teal-500/30">IT Manager</span>;
+      case 'MANAGER':
+        return <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">Quản lý</span>;
+      case 'DEPARTMENT_MANAGER':
+        return <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Trưởng phòng</span>;
+      case 'VIEWER':
+        return <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-slate-700/60 text-slate-300 border border-slate-600/40">Người xem</span>;
       default:
         return <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Nhân viên</span>;
     }
@@ -52,20 +66,34 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
           </div>
         </div>
 
-        {/* User Card */}
+        {/* User Card - Clickable for Profile */}
         {user && (
-          <div className="mx-3 my-4 p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
+          <div 
+            onClick={onOpenProfile}
+            role="button"
+            tabIndex={0}
+            title="Nhấn để xem & chỉnh sửa hồ sơ cá nhân"
+            className="mx-3 my-4 p-3 rounded-xl bg-slate-800/50 hover:bg-slate-800/90 border border-slate-700/50 hover:border-indigo-500/40 transition-all cursor-pointer group shadow-sm"
+          >
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-semibold text-white truncate max-w-[120px]" title={user.full_name}>
-                {user.full_name}
-              </span>
+              <div className="flex items-center gap-2 truncate">
+                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-indigo-500 to-cyan-500 text-[11px] font-bold text-white flex items-center justify-center shrink-0">
+                  {user.full_name?.charAt(0) || user.username?.charAt(0) || 'U'}
+                </div>
+                <span className="text-xs font-semibold text-white truncate max-w-[110px] group-hover:text-indigo-300 transition-colors" title={user.full_name}>
+                  {user.full_name}
+                </span>
+              </div>
               {getRoleBadge(roleCode)}
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
-              <Building2 className="w-3 h-3 text-slate-500 shrink-0" />
-              <span className="truncate" title={deptName || 'Toàn doanh nghiệp'}>
-                {deptName || 'Toàn doanh nghiệp'}
-              </span>
+            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1">
+              <div className="flex items-center gap-1.5 truncate max-w-[150px]">
+                <Building2 className="w-3 h-3 text-slate-500 shrink-0" />
+                <span className="truncate" title={deptName || 'Toàn doanh nghiệp'}>
+                  {deptName || 'Toàn doanh nghiệp'}
+                </span>
+              </div>
+              <span className="text-[10px] text-slate-500 group-hover:text-indigo-400 font-medium">Hồ sơ →</span>
             </div>
           </div>
         )}
@@ -116,6 +144,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
             </div>
             {activeTab === 'tickets' && <ChevronRight className="w-4 h-4 opacity-70" />}
           </button>
+
+          {canManageUsers && (
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                activeTab === 'users'
+                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25'
+                  : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Users className="w-4 h-4" />
+                <span>Quản lý Tài khoản</span>
+              </div>
+              {activeTab === 'users' && <ChevronRight className="w-4 h-4 opacity-70" />}
+            </button>
+          )}
 
           {(isSuperAdmin || isITAdmin) && (
             <button

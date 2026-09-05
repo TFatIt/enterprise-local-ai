@@ -42,10 +42,10 @@ def get_current_user(
     if not user:
         raise credentials_exception
 
-    if not user.is_active:
+    if not user.is_active or getattr(user, "status", "ACTIVE") in ("LOCKED", "INACTIVE", "SUSPENDED"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Tài khoản đã bị tạm khóa. Vui lòng liên hệ quản trị viên."
+            detail="Tài khoản đã bị tạm khóa hoặc vô hiệu hóa. Vui lòng liên hệ quản trị viên."
         )
 
     return user

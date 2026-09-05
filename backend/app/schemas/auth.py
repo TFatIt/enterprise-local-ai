@@ -27,6 +27,12 @@ class UserResponse(BaseModel):
     role: str
     department: Optional[str] = None
     is_active: bool
+    employee_code: Optional[str] = None
+    phone: Optional[str] = None
+    position: Optional[str] = None
+    status: Optional[str] = "ACTIVE"
+    avatar: Optional[str] = None
+    force_password_change: Optional[bool] = False
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -153,7 +153,7 @@ def test_department_and_roles_endpoints():
     # Employee cannot create department (HTTP 403)
     post_resp = client.post(
         "/api/v1/departments",
-        json={"code": "MARKETING", "name": "Phong Marketing"},
+        json={"code": "R_AND_D", "name": "Phong Nghien cuu & Phat trien"},
         headers={"Authorization": f"Bearer {emp_token}"}
     )
     assert post_resp.status_code == 403
@@ -161,8 +161,8 @@ def test_department_and_roles_endpoints():
     # Super Admin can create department (HTTP 201)
     admin_post_resp = client.post(
         "/api/v1/departments",
-        json={"code": "MARKETING", "name": "Phong Marketing"},
+        json={"code": "R_AND_D", "name": "Phong Nghien cuu & Phat trien"},
         headers={"Authorization": f"Bearer {admin_token}"}
     )
     assert admin_post_resp.status_code == 201
-    assert admin_post_resp.json()["code"] == "MARKETING"
+    assert admin_post_resp.json()["code"] == "R_AND_D"

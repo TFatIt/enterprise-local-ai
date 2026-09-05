@@ -25,9 +25,9 @@ class ChatSession(Base):
         back_populates="session",
         cascade="all, delete-orphan",
         order_by="ChatMessage.created_at",
-        lazy="selectin"
+        lazy="select"
     )
-    tickets = relationship("Ticket", back_populates="chat_session", lazy="selectin")
+    tickets = relationship("Ticket", back_populates="chat_session", lazy="select")
 
     def __repr__(self) -> str:
         return f"<ChatSession id={self.id} title={self.title}>"

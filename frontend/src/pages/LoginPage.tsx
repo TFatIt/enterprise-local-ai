@@ -23,6 +23,8 @@ export const LoginPage: React.FC = () => {
     } catch (err: any) {
       if (err.response?.data?.detail) {
         setError(typeof err.response.data.detail === 'string' ? err.response.data.detail : JSON.stringify(err.response.data.detail));
+      } else if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        setError('Máy chủ phản hồi quá lâu (Timeout). Vui lòng kiểm tra lại kết nối Backend.');
       } else if (err.message === 'Network Error' || !err.response) {
         setError('Không thể kết nối đến máy chủ Backend (Port 8000). Vui lòng kiểm tra xem Backend đã khởi động chưa.');
       } else {
@@ -43,6 +45,8 @@ export const LoginPage: React.FC = () => {
     } catch (err: any) {
       if (err.response?.data?.detail) {
         setError(typeof err.response.data.detail === 'string' ? err.response.data.detail : JSON.stringify(err.response.data.detail));
+      } else if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        setError('Máy chủ phản hồi quá lâu (Timeout). Vui lòng kiểm tra lại kết nối Backend.');
       } else if (err.message === 'Network Error' || !err.response) {
         setError('Không thể kết nối đến máy chủ Backend (Port 8000). Vui lòng kiểm tra xem Backend đã khởi động chưa.');
       } else {

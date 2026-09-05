@@ -48,11 +48,14 @@ graph TD
     end
 
     subgraph RAG & AI Engine
-        Parser["Document Parser (PDF, DOCX, TXT)"]
+        Parser["Document Parser (PDF, DOCX, TXT, XLSX, CSV)"]
+        PIIEngine["PII Masker & Redaction Engine (Nghị định 13)"]
         Chunker["Text Chunker (Recursive Character Splitter)"]
         Embedder["Embedding Client (nomic-embed-text)"]
-        VectorStore["ChromaDB Local Collection"]
-        LLMClient["Ollama Client (Qwen3 4B)"]
+        VectorStore["ChromaDB Local Vector Collection"]
+        BM25["BM25 Sparse Lexical Search + RRF Fusion"]
+        Reranker["Local Cross-Encoder Reranker (FlashRank ONNX)"]
+        LLMClient["Ollama Client (Qwen 2.5 3B)"]
     end
 
     subgraph Persistence Layer
@@ -76,10 +79,12 @@ graph TD
     DocService --> LocalFS
     DocService --> Postgres
     DocService --> Parser
-    Parser --> Chunker --> Embedder --> VectorStore
+    Parser --> PIIEngine --> Chunker --> Embedder --> VectorStore
 
     RAGService --> Embedder
     RAGService --> VectorStore
+    RAGService --> BM25
+    RAGService --> Reranker
     RAGService --> LLMClient
     RAGService --> Postgres
 ```

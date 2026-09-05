@@ -34,7 +34,7 @@ class Ticket(Base):
         back_populates="ticket",
         cascade="all, delete-orphan",
         order_by="TicketComment.created_at",
-        lazy="selectin"
+        lazy="select"
     )
 
     def __repr__(self) -> str:

@@ -17,8 +17,8 @@ class Department(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
-    users = relationship("User", back_populates="department", lazy="selectin")
-    documents = relationship("Document", back_populates="department", lazy="selectin")
+    users = relationship("User", back_populates="department", lazy="select")
+    documents = relationship("Document", back_populates="department", lazy="select")
 
     def __repr__(self) -> str:
         return f"<Department code={self.code} name={self.name}>"

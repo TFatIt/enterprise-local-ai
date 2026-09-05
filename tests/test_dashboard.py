@@ -117,3 +117,35 @@ def test_dashboard_metrics_aggregation_accuracy():
 
     updated_stats = client.get("/api/v1/dashboard/stats", headers=headers).json()
     assert updated_stats["summary"]["total_tickets"] == initial_tickets + 1
+
+
+def test_knowledge_gaps_forbidden_for_employee():
+    """Verify that EMPLOYEE is restricted from viewing Knowledge Gaps."""
+    emp_token = get_token_for("employee", "User@123456")
+    resp = client.get("/api/v1/dashboard/knowledge-gaps", headers={"Authorization": f"Bearer {emp_token}"})
+    assert resp.status_code == 403
+
+
+def test_knowledge_gaps_super_admin_success():
+    """Verify that SUPER_ADMIN can retrieve knowledge gap analytics."""
+    admin_token = get_token_for("superadmin", "Admin@123456")
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    resp = client.get("/api/v1/dashboard/knowledge-gaps", headers=headers)
+    assert resp.status_code == 200
+    data = resp.json()
+
+    assert "total_gaps" in data
+    assert "open_gaps" in data
+    assert "resolved_gaps" in data
+    assert "items" in data
+    assert isinstance(data["items"], list)
+    assert len(data["items"]) >= 1
+
+    first_item = data["items"][0]
+    assert "topic" in first_item
+    assert "sample_query" in first_item
+    assert "department_code" in first_item
+    assert "department_name" in first_item
+    assert "query_count" in first_item
+    assert "suggested_action" in first_item
+    assert first_item["status"] in ["OPEN", "RESOLVED"]

@@ -122,5 +122,5 @@ def test_rag_pipeline_out_of_context_fallback():
 
     # Must detect low similarity and suggest IT ticket
     assert res["suggest_ticket"] is True
-    assert "Không tìm thấy thông tin đầy đủ" in res["answer"]
+    assert "Không tìm thấy thông tin" in res["answer"]
     assert len(res["sources"]) == 0

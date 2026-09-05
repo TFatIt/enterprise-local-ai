@@ -199,4 +199,4 @@ Tài liệu này quy định chuẩn thiết kế API, cấu trúc URL, phương
 | Phương thức | Đường dẫn | Phân quyền | Mô tả chức năng |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/dashboard/stats` | `IT_ADMIN`, `SUPER_ADMIN` | Thống kê tổng số: Người dùng, Tài liệu, Câu hỏi, Ticket, Tỷ lệ AI xử lý thành công |
-| `GET` | `/api/v1/dashboard/charts`| `IT_ADMIN`, `SUPER_ADMIN` | Dữ liệu biểu đồ: Số câu hỏi theo ngày, Ticket theo nhóm sự cố, Top tài liệu tra cứu |
+| `GET` | `/api/v1/dashboard/knowledge-gaps` | `IT_ADMIN`, `SUPER_ADMIN` | Phân tích Khoảng trống Tri thức: Thống kê câu hỏi AI chưa có tài liệu theo phòng ban và tần suất |
