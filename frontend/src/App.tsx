@@ -8,11 +8,12 @@ import { DocumentsPage } from './pages/DocumentsPage';
 import { TicketsPage } from './pages/TicketsPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { UsersPage } from './pages/UsersPage';
+import { ITSupportPage } from './pages/ITSupportPage';
 import { UserProfileModal } from './components/UserProfileModal';
 
 const MainLayout: React.FC = () => {
   const { user, loading, updateCurrentUser } = useAuth();
-  const [activeTab, setActiveTab] = useState<'chat' | 'documents' | 'tickets' | 'dashboard' | 'users'>('chat');
+  const [activeTab, setActiveTab] = useState<'chat' | 'documents' | 'tickets' | 'it-support' | 'dashboard' | 'users'>('chat');
   const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
 
   // State when escalating chat to ticket
@@ -57,6 +58,11 @@ const MainLayout: React.FC = () => {
           title: 'Hệ thống IT Support Tickets',
           subtitle: 'Tiếp nhận, xử lý và điều phối các sự cố kỹ thuật hạ tầng CNTT',
         };
+      case 'it-support':
+        return {
+          title: 'Trung tâm Hỗ trợ IT & Script Nhanh',
+          subtitle: 'Chẩn đoán thông minh, kho script PowerShell chạy ngay, biên bản bàn giao máy và quản lý thư mục nạp tự động',
+        };
       case 'dashboard':
         return {
           title: 'Báo cáo & Phân tích Quản trị',
@@ -98,6 +104,7 @@ const MainLayout: React.FC = () => {
               }}
             />
           )}
+          {activeTab === 'it-support' && <ITSupportPage />}
           {activeTab === 'dashboard' && (
             <DashboardPage onNavigateDocuments={() => setActiveTab('documents')} />
           )}

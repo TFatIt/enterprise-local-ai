@@ -1,0 +1,17 @@
+{
+  "imported_files": {
+    "docs\\kb_it_printer_printserver_troubleshooting.md": {
+      "hash": "f4ca4ca287b105b73e6f2864a25f1d4ba0e90bc2a1e7cd8435d1c69b0f6bbc12",
+      "imported_at": "2026-09-11T16:08:35.662634+00:00",
+      "file_size": 11319,
+      "file_type": ".md"
+    },
+    "docs\\sample_cyber_security_pdpd.txt": {
+      "hash": "a946b9835734c33936ee954c3c5b89a9c9cf9d5b91cac2eee44e2c965ec723b1",
+      "imported_at": "2026-09-11T16:27:28.006315+00:00",
+      "file_size": 3628,
+      "file_type": ".txt"
+    }
+  },
+  "last_scan": "2026-09-11T16:27:28.006315+00:00"
+}

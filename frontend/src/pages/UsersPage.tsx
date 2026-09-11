@@ -1216,7 +1216,7 @@ export const UsersPage: React.FC = () => {
                 Ma trận Quyền hạn RBAC (Role-Based Access Control)
               </h3>
               <p className="text-xs text-slate-400 mt-1">
-                Các quyền hạn được gắn với từng vai trò người dùng trong hệ sinh thái Enterprise Local AI
+                Các quyền hạn được gắn với từng vai trò người dùng trong hệ sinh thái Local AI Nội bộ doanh nghiệp
               </p>
             </div>
 

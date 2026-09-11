@@ -173,7 +173,7 @@ export const DocumentsPage: React.FC = () => {
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!uploadFile) {
-      setUploadError('Vui lòng chọn file tài liệu (.pdf, .docx, .txt)');
+      setUploadError('Vui lòng chọn file tài liệu hoặc kịch bản lệnh.');
       return;
     }
 
@@ -194,6 +194,7 @@ export const DocumentsPage: React.FC = () => {
     try {
       await api.post('/documents/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 180000,
       });
       setShowUploadModal(false);
       setUploadFile(null);
@@ -205,7 +206,27 @@ export const DocumentsPage: React.FC = () => {
       setUploadVersion('1.0');
       loadDocuments();
     } catch (err: any) {
-      setUploadError(err.response?.data?.detail || 'Nạp tài liệu thất bại.');
+      let errorMsg = 'Nạp tài liệu thất bại.';
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        errorMsg = 'Quá thời gian chờ (Timeout) khi máy chủ trích xuất và tạo vector embedding. Vui lòng thử lại.';
+      } else if (err.response?.status === 403) {
+        errorMsg = err.response?.data?.detail || 'Bạn không có quyền nạp tài liệu vào phòng ban này (Yêu cầu tài khoản Quản trị viên hoặc Trưởng phòng).';
+      } else if (err.response?.status === 413) {
+        errorMsg = 'Dung lượng tệp vượt quá giới hạn cho phép (tối đa 25MB).';
+      } else if (err.response?.data?.detail) {
+        if (typeof err.response.data.detail === 'string') {
+          errorMsg = err.response.data.detail;
+        } else if (Array.isArray(err.response.data.detail)) {
+          errorMsg = err.response.data.detail.map((item: any) => item.msg || JSON.stringify(item)).join(', ');
+        } else {
+          errorMsg = JSON.stringify(err.response.data.detail);
+        }
+      } else if (err.response?.data?.message) {
+        errorMsg = err.response.data.message;
+      } else if (err.message) {
+        errorMsg = `Lỗi kết nối: ${err.message}`;
+      }
+      setUploadError(errorMsg);
     } finally {
       setUploading(false);
     }
@@ -490,7 +511,7 @@ export const DocumentsPage: React.FC = () => {
             className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs flex items-center gap-2 shadow-lg shadow-indigo-600/25 transition-all"
           >
             <Upload className="w-4 h-4" />
-            <span>Nạp tài liệu mới (.pdf, .docx, .txt)</span>
+            <span>Nạp tài liệu mới (.pdf, .docx, .txt, .bat...)</span>
           </button>
         ) : (
           <span className="text-xs text-slate-500 italic">Quyền xem theo thẩm quyền tài khoản</span>
@@ -1386,10 +1407,10 @@ export const DocumentsPage: React.FC = () => {
 
             <form onSubmit={handleUploadSubmit} className="space-y-3 text-xs">
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">File tài liệu (.pdf, .docx, .txt, .xlsx, .csv)</label>
+                <label className="block font-semibold text-slate-300 mb-1">File tài liệu hoặc Script (.pdf, .docx, .txt, .md, .bat, .ps1, .sh, .xlsx, .csv, .sql, .json)</label>
                 <input
                   type="file"
-                  accept=".pdf,.docx,.txt,.xlsx,.csv"
+                  accept=".pdf,.docx,.txt,.md,.xlsx,.csv,.bat,.ps1,.sh,.sql,.json,.log,.ini,.yml,.yaml"
                   onChange={(e) => {
                     const f = e.target.files?.[0] || null;
                     setUploadFile(f);

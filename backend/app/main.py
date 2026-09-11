@@ -14,6 +14,8 @@ from app.api.v1.documents import router as documents_router
 from app.api.v1.chat import router as chat_router
 from app.api.v1.tickets import router as tickets_router
 from app.api.v1.dashboard import router as dashboard_router
+from app.api.v1.auto_import import router as auto_import_router
+from app.api.v1.it_support import router as it_support_router
 
 
 @asynccontextmanager
@@ -55,6 +57,8 @@ app.include_router(documents_router, prefix=f"{settings.API_V1_STR}/documents", 
 app.include_router(chat_router, prefix=f"{settings.API_V1_STR}/chat", tags=["Chat & AI Assistant"])
 app.include_router(tickets_router, prefix=f"{settings.API_V1_STR}/tickets", tags=["IT Tickets & Helpdesk"])
 app.include_router(dashboard_router, prefix=f"{settings.API_V1_STR}/dashboard", tags=["Admin Dashboard"])
+app.include_router(auto_import_router, prefix=f"{settings.API_V1_STR}/auto-import", tags=["Auto-Import & Watcher"])
+app.include_router(it_support_router, prefix=f"{settings.API_V1_STR}/it-support", tags=["IT Support & Network Helpdesk"])
 
 
 @app.get("/", tags=["General"])

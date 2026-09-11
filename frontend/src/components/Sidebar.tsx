@@ -11,13 +11,14 @@ import {
   ShieldCheck, 
   Database,
   Building2,
-  ChevronRight
+  ChevronRight,
+  Wrench
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface SidebarProps {
-  activeTab: 'chat' | 'documents' | 'tickets' | 'dashboard' | 'users';
-  setActiveTab: (tab: 'chat' | 'documents' | 'tickets' | 'dashboard' | 'users') => void;
+  activeTab: 'chat' | 'documents' | 'tickets' | 'it-support' | 'dashboard' | 'users';
+  setActiveTab: (tab: 'chat' | 'documents' | 'tickets' | 'it-support' | 'dashboard' | 'users') => void;
   onOpenProfile?: () => void;
 }
 
@@ -58,8 +59,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onOpe
             <Bot className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="font-bold text-white text-base tracking-tight flex items-center gap-1.5">
-              Enterprise AI
+            <h1 className="font-bold text-white text-sm tracking-tight flex items-center gap-1.5">
+              Local AI Nội bộ doanh nghiệp
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             </h1>
             <p className="text-xs text-slate-400 font-medium">Local Assistant & RAG</p>
@@ -143,6 +144,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onOpe
               <span>IT Support Tickets</span>
             </div>
             {activeTab === 'tickets' && <ChevronRight className="w-4 h-4 opacity-70" />}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('it-support')}
+            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              activeTab === 'it-support'
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25'
+                : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <Wrench className="w-4 h-4" />
+              <span>Hỗ trợ IT & Script</span>
+            </div>
+            {activeTab === 'it-support' && <ChevronRight className="w-4 h-4 opacity-70" />}
           </button>
 
           {canManageUsers && (

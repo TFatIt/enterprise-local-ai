@@ -191,6 +191,32 @@ class DocumentParser:
         return pages
 
     @classmethod
+    def parse_image(cls, file_path: str) -> List[Dict[str, Any]]:
+        """Extract text and knowledge from image using Ollama Vision AI."""
+        try:
+            from app.services.multimodal_service import multimodal_service
+            text = multimodal_service.describe_image(file_path)
+            cleaned = cls.clean_text(text, mask_sensitive_pii=False)
+            return [{"text": cleaned, "page": 1}] if cleaned else []
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Image parsing failed: {e}")
+            return []
+
+    @classmethod
+    def parse_video(cls, file_path: str) -> List[Dict[str, Any]]:
+        """Extract text and knowledge from video via keyframe analysis."""
+        try:
+            from app.services.multimodal_service import multimodal_service
+            text = multimodal_service.extract_video_knowledge(file_path)
+            cleaned = cls.clean_text(text, mask_sensitive_pii=False)
+            return [{"text": cleaned, "page": 1}] if cleaned else []
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Video parsing failed: {e}")
+            return []
+
+    @classmethod
     def parse_file(cls, file_path: str, file_type: str) -> List[Dict[str, Any]]:
         """Dispatch parsing based on file extension."""
         ft = file_type.upper()
@@ -204,8 +230,12 @@ class DocumentParser:
             return cls.parse_xlsx(file_path)
         elif ft == "CSV":
             return cls.parse_csv(file_path)
+        elif ft == "IMAGE":
+            return cls.parse_image(file_path)
+        elif ft == "VIDEO":
+            return cls.parse_video(file_path)
         else:
-            raise ValueError(f"Định dạng tệp '{file_type}' không được hỗ trợ. Chỉ hỗ trợ PDF, DOCX, TXT, XLSX, CSV.")
+            raise ValueError(f"Định dạng tệp '{file_type}' không được hỗ trợ.")
 
 
 parser = DocumentParser()

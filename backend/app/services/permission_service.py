@@ -15,8 +15,8 @@ class PermissionService:
     """Service evaluating role-based and department-based document access control."""
 
     SUPER_ROLES = {"SUPER_ADMIN"}
-    ADMIN_ROLES = {"SUPER_ADMIN", "ADMIN", "IT_ADMIN"}
-    MANAGEMENT_ROLES = {"SUPER_ADMIN", "ADMIN", "IT_ADMIN", "MANAGER"}
+    ADMIN_ROLES = {"SUPER_ADMIN", "ADMIN", "IT_ADMIN", "IT_MANAGER"}
+    MANAGEMENT_ROLES = {"SUPER_ADMIN", "ADMIN", "IT_ADMIN", "IT_MANAGER", "MANAGER", "DEPARTMENT_MANAGER"}
 
     @classmethod
     def can_user_access_document(

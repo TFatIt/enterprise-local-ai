@@ -71,7 +71,7 @@ export const LoginPage: React.FC = () => {
               <Bot className="w-8 h-8 text-cyan-400" />
             </div>
           </div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">Enterprise Local AI</h1>
+          <h1 className="text-2xl font-extrabold text-white tracking-tight">Local AI Nội bộ doanh nghiệp</h1>
           <p className="text-xs text-slate-400 mt-1">Trợ lý Trí tuệ Nhân tạo & Hỗ trợ Kỹ thuật CNTT Nội bộ</p>
         </div>
 

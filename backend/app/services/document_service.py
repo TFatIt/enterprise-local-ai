@@ -32,6 +32,30 @@ class DocumentService:
         ".xlsx": "XLSX",
         ".csv": "CSV",
         ".md": "TXT",
+        ".bat": "TXT",
+        ".ps1": "TXT",
+        ".sh": "TXT",
+        ".sql": "TXT",
+        ".json": "TXT",
+        ".log": "TXT",
+        ".ini": "TXT",
+        ".yaml": "TXT",
+        ".yml": "TXT",
+        # Image formats (processed via Ollama Vision AI)
+        ".png": "IMAGE",
+        ".jpg": "IMAGE",
+        ".jpeg": "IMAGE",
+        ".webp": "IMAGE",
+        ".bmp": "IMAGE",
+        ".gif": "IMAGE",
+        ".tiff": "IMAGE",
+        ".tif": "IMAGE",
+        # Video formats (processed via keyframe extraction + Vision AI)
+        ".mp4": "VIDEO",
+        ".mkv": "VIDEO",
+        ".avi": "VIDEO",
+        ".mov": "VIDEO",
+        ".webm": "VIDEO",
     }
 
     @staticmethod
@@ -69,7 +93,7 @@ class DocumentService:
         if ext_lower not in cls.ALLOWED_EXTENSIONS:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Định dạng tệp '{ext}' không được hỗ trợ. Chỉ chấp nhận: .pdf, .docx, .txt, .xlsx, .csv"
+                detail=f"Định dạng tệp '{ext}' không được hỗ trợ. Chấp nhận: .pdf, .docx, .txt, .md, .xlsx, .csv, .bat, .ps1, .sh, .sql, .json, .log"
             )
 
         file_type = cls.ALLOWED_EXTENSIONS[ext_lower]
